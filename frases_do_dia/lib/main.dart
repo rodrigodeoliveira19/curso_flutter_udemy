@@ -14,9 +14,11 @@ void main() {
       decoration:
           BoxDecoration(border: Border.all(width: 3, color: Colors.cyan)),
       margin: EdgeInsets.only(top: 40),
-      child: Column(
-        children: [Text("gagagg hahahhahha jajajjaja jajajjaja ajajajjsaj")],
-      ),
+      child: Image.asset(
+        "imagens/uber_2.png",
+        //Area ocupada.
+        fit: BoxFit.fill,
+      )
     ),
   ));
 }
