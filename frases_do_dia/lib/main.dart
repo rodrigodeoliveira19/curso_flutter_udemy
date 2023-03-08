@@ -9,16 +9,20 @@ void main() {
     //     style: TextStyle(fontSize: 20),),
     //   Text("T2: ")
     // ],),
-    home: Container(
-      //color: Colors.white,
-      decoration:
-          BoxDecoration(border: Border.all(width: 3, color: Colors.cyan)),
-      margin: EdgeInsets.only(top: 40),
-      child: Image.asset(
-        "imagens/uber_2.png",
-        //Area ocupada.
-        fit: BoxFit.fill,
-      )
-    ),
+    home: Scaffold(
+      //Barra superior do App
+      appBar: AppBar(
+        title: Text("Instagram"),
+        backgroundColor: Colors.green,
+      ),
+      //Corpo / Area Central
+      body: Text("Add mensagem no body"),
+      bottomNavigationBar: BottomAppBar(
+        color: Colors.green,
+        child: Padding(
+          padding: EdgeInsets.all(16),
+        ),
+      ),
+    )
   ));
 }
