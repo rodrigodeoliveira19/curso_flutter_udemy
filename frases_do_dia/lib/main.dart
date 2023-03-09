@@ -1,87 +1,57 @@
 import 'package:flutter/material.dart';
 
-/* Stateless -> Widgets que não podem ser alterados(constates).
-   Stateful -> Widgets que podem ser alterados(Variaveis).
-* */
 
-void main() {
+void main(){
   runApp(MaterialApp(
+    home: Home(),
     debugShowCheckedModeBanner: false,
-    title: "Frases do dia",
-    //Atributo para widgets
-    // home: Row(children: [
-    //   Text("Lorem ipsum dolor sit amet, consectetur adipiscing elit ",
-    //     style: TextStyle(fontSize: 20),),
-    //   Text("T2: ")
-    // ],),
-    home: HomeStateful(),
   ));
 }
 
-class HomeStateful extends StatefulWidget {
-  const HomeStateful({Key? key}) : super(key: key);
+class Home extends StatefulWidget {
+  const Home({Key? key}) : super(key: key);
 
   @override
-  State<HomeStateful> createState() => _HomeStatefulState();
+  State<Home> createState() => _HomeState();
 }
 
-class _HomeStatefulState extends State<HomeStateful> {
+class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
-
-    var _titulo = "Instagram";
-
     return Scaffold(
-      //Barra superior do App
+      //AppBar - Barra superior do App
       appBar: AppBar(
-        title: Text(_titulo),
+        title: Text("Frases do dia"),
         backgroundColor: Colors.green,
       ),
-      //Corpo / Area Central
+      //Container - Cria uma caixa para componentes - Ocupa o espaço do componente caso exista.
       body: Container(
+        //Espaçamento dentro do container..
+        padding: EdgeInsets.all(16),
+        width: double.infinity, // Faz o container ocupar toda area disponivel
         child: Column(
-          children: <Widget>[
-            FloatingActionButton(onPressed: (){
-              //Altera o estado dos componentes
-              setState(() {
-                _titulo = "Uber";
-              });
-            },
-                backgroundColor: Colors.lightBlue,
-                child: Text("Click AQ.")) ,
+          //Alinha os componentes dentro da coluna
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,//gerou espaço entre os componentes filhos
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Image.asset("imagens/logo-frases-do-dia.png"), 
+            Text("Clique abaixo para gerar uma frase!",
+            textAlign: TextAlign.justify,//Alinhamento do texto.
+            style: TextStyle(//Estilo
+              fontSize: 17,
+              fontStyle: FontStyle.italic,
+              color: Colors.black
+            ),),
+            ElevatedButton(onPressed: (){},
+                child: Text("Nova Frase"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
 
+              ),
+            )
           ],
         ),
-      )
-
+      ),
     );
   }
 }
-
-
-// Conferir doc. Não rodou
-// class Home extends StatelessWidget {
-//   const Home({Key? key}) : super(key: key);
-//
-//   var _titulo = "Instagram";
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       //Barra superior do App
-//       appBar: AppBar(
-//         title: Text(_titulo),
-//         backgroundColor: Colors.green,
-//       ),
-//       //Corpo / Area Central
-//       body: Text("Add mensagem no body"),
-//       bottomNavigationBar: BottomAppBar(
-//         color: Colors.green,
-//         child: Padding(
-//           padding: EdgeInsets.all(16),
-//         ),
-//       ),
-//     );
-//
-//   }
-// }
