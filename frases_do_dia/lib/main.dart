@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
 
 
 void main(){
@@ -16,6 +17,25 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+
+  var _frases = [
+    "Seja bem-vindo. Essa é uma das minhas várias versões.",
+    "Estamos todos tentando aprender como viver. Vamos ser gentis. ✌🏻",
+    "Não me siga porque eu nem eu sei para onde estou indo 😂",
+    "Quando estiver em busca de mudança, mude.",
+    "Aqui a realidade é sem filtros. 👀"
+  ];
+
+  var _fraseGerada = "Clique abaixo para gerar uma frase!";
+
+  void _gerarFrase(){
+    var numeroSorteado = Random().nextInt(_frases.length);
+
+    setState(() {
+      _fraseGerada = _frases[numeroSorteado];
+    });
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,14 +55,14 @@ class _HomeState extends State<Home> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Image.asset("imagens/logo-frases-do-dia.png"), 
-            Text("Clique abaixo para gerar uma frase!",
+            Text(_fraseGerada,
             textAlign: TextAlign.justify,//Alinhamento do texto.
             style: TextStyle(//Estilo
               fontSize: 17,
               fontStyle: FontStyle.italic,
               color: Colors.black
             ),),
-            ElevatedButton(onPressed: (){},
+            ElevatedButton(onPressed: _gerarFrase,
                 child: Text("Nova Frase"),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
