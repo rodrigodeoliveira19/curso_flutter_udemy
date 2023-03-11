@@ -35,7 +35,7 @@ class _HomeState extends State<Home> {
       _fraseGerada = _frases[numeroSorteado];
     });
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
