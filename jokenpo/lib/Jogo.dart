@@ -29,7 +29,15 @@ class _JogoState extends State<Jogo> {
                   fontWeight: FontWeight.bold
                 ),) ,
           ),
-          Image.asset("imagens/padrao.png"),
+          //Classe responsável por detectar toques na tela
+          GestureDetector(
+          /** Pode usar mais de uma função
+           * onTap - Um clique na imagem
+           * onDoubleTap - Dois cliques na imagem.
+           */
+          onTap: (){print("Cliqeyeb   dfdfdffdfd");},
+            child: Image.asset("imagens/padrao.png"),
+          ),
           Padding(
             padding: EdgeInsets.only(top: 32,bottom: 16),
             child: Text(
@@ -48,12 +56,12 @@ class _JogoState extends State<Jogo> {
            scrollDirection: Axis.horizontal,
            child: Row(
              children: [
-               Image.asset("imagens/padrao.png"),
-               Image.asset("imagens/padrao.png"),
-               Image.asset("imagens/padrao.png"),
+               Image.asset("imagens/pedra.png"),
+               Image.asset("imagens/papel.png"),
+               Image.asset("imagens/tesoura.png"),
              ],
            ),
-         ), 
+         ),
         ],
       ),
     );
