@@ -11,6 +11,23 @@ class _HomeState extends State<Home> {
 
   TextEditingController _controllerAlcool = TextEditingController();
   TextEditingController _controllerGasolina = TextEditingController();
+  String _textoResultado = "";
+
+  void _calcular(){
+    var precoAlcool = double.tryParse(_controllerAlcool.text);
+    var precoGasolina = double.tryParse(_controllerGasolina.text);
+
+    if((precoAlcool!/precoGasolina!) >= 0.7){
+      setState(() {
+        _textoResultado = "Melhor abastecer com Gasolina.";
+      });
+    }else{
+      setState(() {
+        _textoResultado = "Melhor abastecer com Álcool.";
+      });
+    }
+    print(precoAlcool);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +73,7 @@ class _HomeState extends State<Home> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: _calcular,
                       child: Text(
                         "Calcular",
                         style: TextStyle(fontSize: 20),
@@ -71,7 +88,7 @@ class _HomeState extends State<Home> {
               Padding(
                 padding: EdgeInsets.only(top: 20),
                 child: Text(
-                  "Resultado",
+                  _textoResultado,
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
               )
