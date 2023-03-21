@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
+
 
 class EntradaCheckBox extends StatefulWidget {
   const EntradaCheckBox({Key? key}) : super(key: key);
@@ -51,7 +51,7 @@ class _EntradaCheckBoxState extends State<EntradaCheckBox> {
             ElevatedButton(
               onPressed: (){
                 print("Valor checkBox Comida Brasileira: "+ _comidaBrasileira.toString());
-                print("Valor checkBox Comida Mexicana: "+ _comidaMexicana.toString()); 
+                print("Valor checkBox Comida Mexicana: "+ _comidaMexicana.toString());
               },
               child: Text(
                 "Obter valor botão",
