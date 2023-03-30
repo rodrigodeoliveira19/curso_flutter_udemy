@@ -1,4 +1,9 @@
+import 'package:atm_consultoria/TelaEmpresa.dart';
 import 'package:flutter/material.dart';
+
+import 'TelaCliente.dart';
+import 'TelaContato.dart';
+import 'TelaServico.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -10,15 +15,22 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
 
   void _abrirEmpresa(){
-
+    Navigator.push(context,
+        MaterialPageRoute(builder: (context)=> TelaEmpresa()));
   }
   void _abrirServico(){
+    Navigator.push(context,
+        MaterialPageRoute(builder: (context)=> TelaServico()));
 
   }void _abrirCliente(){
-
-  }void _abrirContato(){
-
+    Navigator.push(context,
+        MaterialPageRoute(builder: (context)=> TelaCliente()));
   }
+  void _abrirContato(){
+    Navigator.push(context,
+        MaterialPageRoute(builder: (context)=> TelaContato()));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
