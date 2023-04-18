@@ -13,10 +13,12 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
 
+  String _resultado = "";
+  TextEditingController _cepController = TextEditingController();
 
   void _recuperaCep() async{
     String cep = "01153000";
-    String url = "https://viacep.com.br/ws/${cep}/json/";
+    String url = "https://viacep.com.br/ws/${_cepController.text}/json/";
     var uri = Uri.parse(url);
 
     http.Response response = await http.get(uri);
@@ -25,6 +27,10 @@ class _HomeState extends State<Home> {
     print("logradouro: "+responseMap["logradouro"]);
     print("bairro: "+responseMap["bairro"]);
     print("localidade: "+responseMap["localidade"]);
+
+    setState(() {
+      _resultado  = "${responseMap["logradouro"]} - ${responseMap["bairro"]} - ${responseMap["localidade"]}";
+    });
   }
 
   @override
@@ -37,6 +43,12 @@ class _HomeState extends State<Home> {
         padding: EdgeInsets.all(40),
         child: Column(
           children: [
+            TextField(
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(labelText: "Digite o cep: xxxxxxxx"),
+              style: TextStyle(fontSize: 20),
+              controller: _cepController,
+            ),
             ElevatedButton(
               onPressed: _recuperaCep,
               child: Text(
@@ -46,7 +58,8 @@ class _HomeState extends State<Home> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
               ),
-            )
+            ),
+            Text(_resultado),
           ],
         ),
       ),
