@@ -50,6 +50,53 @@ class _HomeState2 extends State<Home2> {
     print("reponse body: ${response.body}");
   }
 
+  _put() async{
+    String _url_Base = "https://jsonplaceholder.typicode.com";
+    var uri = Uri.parse("$_url_Base/posts/2");
+
+    Post post = new Post(1, 2, "Teste object", "Teste body");
+
+    http.Response response = await http.put(uri,
+        body: json.encode(post.toJson()),
+        headers: {
+          'Content-type': 'application/json; charset=UTF-8',
+        });
+
+    print("reponse statusCode: ${response.statusCode}");
+    print("reponse body: ${response.body}");
+  }
+
+  _patch() async{
+    String _url_Base = "https://jsonplaceholder.typicode.com";
+    var uri = Uri.parse("$_url_Base/posts/2");
+
+    http.Response response = await http.patch(uri,
+        body: json.encode({
+          "userId": 1,
+          "id": 2,
+          "title": "Exemplo de requisição put.",
+        }),
+        headers: {
+          'Content-type': 'application/json; charset=UTF-8',
+        });
+
+    print("reponse statusCode: ${response.statusCode}");
+    print("reponse body: ${response.body}");
+  }
+
+  _delete() async{
+    String _url_Base = "https://jsonplaceholder.typicode.com";
+    var uri = Uri.parse("$_url_Base/posts/2");
+
+    http.Response response = await http.delete(uri,
+        headers: {
+          'Content-type': 'application/json; charset=UTF-8',
+        });
+
+    print("reponse statusCode: ${response.statusCode}");
+    print("reponse body: ${response.body}");
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,7 +120,10 @@ class _HomeState2 extends State<Home2> {
                   ),
                 ),
                 ElevatedButton(
-                  onPressed: () {},
+                  /* _put -> Atualiza todos os campos do Objeto.
+                     _patch -> Atualiza campos específicos informados na requisição.
+                  * */
+                  onPressed: _put,
                   child: Text(
                     "Atualizar",
                     style: TextStyle(fontSize: 20),
@@ -83,7 +133,7 @@ class _HomeState2 extends State<Home2> {
                   ),
                 ),
                 ElevatedButton(
-                  onPressed: () {},
+                  onPressed: _delete,
                   child: Text(
                     "Deletar",
                     style: TextStyle(fontSize: 20),
