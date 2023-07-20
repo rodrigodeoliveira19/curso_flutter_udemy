@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:youtube/telas/EmAlta.dart';
+import 'package:youtube/telas/Inicio.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -8,8 +10,17 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+
+  int _indiceItemAtual = 0;
+
   @override
   Widget build(BuildContext context) {
+
+    List<Widget> telas = [
+      Inicio(),
+      EmAlta(),
+    ];
+
     return Scaffold(
       appBar: AppBar(
         //Cor para o AppBar
@@ -26,7 +37,22 @@ class _HomeState extends State<Home> {
           IconButton(onPressed: (){print("Icons.account_circle");}, icon: Icon(Icons.account_circle)),
         ],
       ),
-      body: Container(),
+      body: telas[_indiceItemAtual],
+      bottomNavigationBar: BottomNavigationBar(
+        // BottomNavigationBar - Dois tipos fixed e shifting
+        type: BottomNavigationBarType.fixed,
+        // Item selecionado
+        currentIndex: _indiceItemAtual,
+        onTap: (indice){
+          setState(() {
+            _indiceItemAtual = indice;
+          });
+        },
+        items: [
+          BottomNavigationBarItem(label: "Inicio", icon: Icon(Icons.home)),
+          BottomNavigationBarItem(label: "Em alta", icon: Icon(Icons.whatshot)),
+        ],
+      ),
     );
   }
 }
