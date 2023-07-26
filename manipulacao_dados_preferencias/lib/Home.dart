@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -8,9 +9,29 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  String _textoSalvo = "Nada Savo";
   TextEditingController _controllerCampo = TextEditingController();
 
-  _salvar() {}
+  _salvar() async{
+    String valorDigitado = _controllerCampo.text;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("key_user_text", valorDigitado);
+
+    print("Valor Salvo: ${valorDigitado}");
+  }
+  _recuperar() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _textoSalvo =  prefs.getString("key_user_text")! ?? "Sem valor";
+    });
+    print("Recuperar: ${_textoSalvo}");
+  }
+  _remover() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.remove("key_user_text");
+    print("Remoção: ${_textoSalvo}");
+
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +43,7 @@ class _HomeState extends State<Home> {
         padding: EdgeInsets.all(32),
         child: Column(
           children: [
-            Text("Nada Salvo"),
+            Text(_textoSalvo),
             TextField(
               keyboardType: TextInputType.text,
               decoration: InputDecoration(
@@ -46,7 +67,7 @@ class _HomeState extends State<Home> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    _salvar();
+                    _recuperar();
                   },
                   child: Text(
                     "Recuperar",
@@ -55,7 +76,19 @@ class _HomeState extends State<Home> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                   ),
-                )
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    _remover();
+                  },
+                  child: Text(
+                    "Remover",
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                  ),
+                ),
               ],
             )
           ],
