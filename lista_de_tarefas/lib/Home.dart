@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -8,10 +12,25 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  List _tarefas = ["Ir ao mercado", "Estudar", "Fazer Exercícios"];
+  List _tarefas = [];
+
+  _salvarArquivo() async{
+    final diretorio = await getApplicationDocumentsDirectory();
+    var arquivo = File("${diretorio.path}/dados.json");
+
+    Map<String, dynamic> tarefas = Map();
+    tarefas["titulo"] = "Ir ao mercado";
+    tarefas["realizada"] = false;
+    _tarefas.add(tarefas);
+    
+    String dados = json.encode(_tarefas);
+    arquivo.writeAsString(dados);
+  }
 
   @override
   Widget build(BuildContext context) {
+    _salvarArquivo();
+
     return Scaffold(
       appBar: AppBar(
         title: Text("Lista de Tarefas"),
