@@ -14,22 +14,46 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   List _tarefas = [];
 
-  _salvarArquivo() async{
+  Future<File> _getFile() async{
     final diretorio = await getApplicationDocumentsDirectory();
-    var arquivo = File("${diretorio.path}/dados.json");
+    return File("${diretorio.path}/dados.json");
+  }
+  _salvarArquivo() async{
 
     Map<String, dynamic> tarefas = Map();
     tarefas["titulo"] = "Ir ao mercado";
     tarefas["realizada"] = false;
     _tarefas.add(tarefas);
-    
+
+    var arquivo = await _getFile();
+
     String dados = json.encode(_tarefas);
     arquivo.writeAsString(dados);
   }
 
+  _lerArquivo() async{
+    try{
+      final arquivo = await _getFile();
+      return arquivo.readAsString();
+    }catch(ex){
+      return null;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _lerArquivo().then( (dados){
+      setState(() {
+        _tarefas = json.decode(dados);
+      });
+    } );
+  }
   @override
   Widget build(BuildContext context) {
-    _salvarArquivo();
+    // _salvarArquivo();
+    print("Itens: "+ _tarefas.toString());
 
     return Scaffold(
       appBar: AppBar(
@@ -83,7 +107,7 @@ class _HomeState extends State<Home> {
               child: ListView.builder(
             itemBuilder: (context, index) {
               return ListTile(
-                title: Text(_tarefas[index]),
+                title: Text(_tarefas[index]["titulo"]),
               );
             },
             itemCount: _tarefas.length,
