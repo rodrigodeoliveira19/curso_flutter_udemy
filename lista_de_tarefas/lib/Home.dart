@@ -61,6 +61,48 @@ class _HomeState extends State<Home> {
     });
   }
 
+  Widget _carregarItemLista(context, index){
+    final item = _tarefas[index]["titulo"];
+
+    return Dismissible(
+        key: Key(item),
+        direction: DismissDirection.endToStart,
+        onDismissed: (direction){
+
+          //Remove item da lista
+          _tarefas.removeAt(index);
+          _salvarArquivo();
+
+        },
+        background: Container(
+          color: Colors.red,
+          padding: EdgeInsets.all(16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: <Widget>[
+              Icon(
+                Icons.delete,
+                color: Colors.white,
+              )
+            ],
+          ),
+        ),
+        child: CheckboxListTile(
+          title: Text( _tarefas[index]['titulo'] ),
+          value: _tarefas[index]['realizada'],
+          onChanged: (valorAlterado){
+
+            setState(() {
+              _tarefas[index]['realizada'] = valorAlterado;
+            });
+
+            _salvarArquivo();
+
+          },
+        )
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // _salvarArquivo();
@@ -120,22 +162,7 @@ class _HomeState extends State<Home> {
         children: [
           Expanded(
               child: ListView.builder(
-                itemBuilder: (context, index) {
-                  return CheckboxListTile(
-                  title: Text(_tarefas[index]["titulo"]),
-                  value: _tarefas[index]["realizada"],
-                  onChanged: (valorAlterado) {
-
-                    setState(() {
-                      _tarefas[index]["realizada"] = valorAlterado;
-                    });
-
-                    _salvarArquivo();
-                  });
-              // return ListTile(
-                  //   title: Text(_tarefas[index]["titulo"]),
-                  // );
-                },
+                itemBuilder: _carregarItemLista,
                 itemCount: _tarefas.length,
               ))
         ],
