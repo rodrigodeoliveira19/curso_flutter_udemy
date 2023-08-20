@@ -24,7 +24,7 @@ class _HomeState extends State<Home> {
     var arquivo = await _getFile();
 
     String dados = json.encode(_tarefas);
-    print("_salvarArquivo: "+dados.toString()); 
+    print("_salvarArquivo: "+dados.toString());
     arquivo.writeAsString(dados);
   }
 
