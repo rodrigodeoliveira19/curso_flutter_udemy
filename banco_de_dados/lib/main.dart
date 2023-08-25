@@ -30,7 +30,7 @@ class _HomeState extends State<Home> {
         }
     );
 
-    return bd; 
+    return bd;
   }
 
   //Existe outras formas de manipular dados. Ver doc.
@@ -44,13 +44,27 @@ class _HomeState extends State<Home> {
     };
     int id = await bd.insert("usuarios", dadosUsuario);
     print("Salvo: $id " );
+  }
 
+  _listarUsuarios() async{
+    Database bd = await getBD();
+    String sql = "SELECT * FROM usuarios";
+
+    List usuarios = await bd.rawQuery(sql);
+    for(var usuario in usuarios){
+      print(
+        "id: "+ usuario["id"].toString() +
+          "nome: "+ usuario["nome"] +
+          "idade: "+ usuario["idade"].toString()
+      ) ;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
 
     _salvar();
+    _listarUsuarios();
 
     return Container();
   }
