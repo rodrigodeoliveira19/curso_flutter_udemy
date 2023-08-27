@@ -1,8 +1,15 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 void main() async {
+  //_obterDados();
+  _autenticacao();
+  runApp(const MyApp());
+}
+
+_obterDados() async{
   print('Antes WidgetsFlutterBinding');
   //Inicializar Firebase
   WidgetsFlutterBinding.ensureInitialized();
@@ -75,8 +82,34 @@ void main() async {
   // }
 
   print('Executei');
+}
 
-  runApp(const MyApp());
+_autenticacao() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+
+  FirebaseAuth auth = FirebaseAuth.instance;
+
+  /* Criando usuário com e-mail e senha */
+  String email = "jamilton@gmail.com";
+  String senha = "123456";
+
+
+  /*auth.createUserWithEmailAndPassword(
+      email: email,
+      password: senha
+  ).then((firebaseUser){
+    print("novo usuario: sucesso!! e-mail: " + firebaseUser.toString() );
+  }).catchError((erro){
+    print("novo usuario: erro " + erro.toString() );
+  });*/
+
+  User? usuarioAtual = await auth.currentUser;
+  if( usuarioAtual != null ){//logado
+    print("Usuario atual logado email: " + usuarioAtual.toString());
+  }else{//deslogado
+    print("Usuario atual está DESLOGADO!!");
+  }
 }
 
 class MyApp extends StatelessWidget {
