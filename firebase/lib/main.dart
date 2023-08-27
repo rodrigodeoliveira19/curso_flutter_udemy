@@ -40,7 +40,7 @@ void main() async {
   // var dados = snapshot.data() as Map;
   // print("Valor : "+dados['Rodrigo']);
 
-  //Get All
+  //Get All - Pode aplicar filtros após a chamada de collection
   // QuerySnapshot querySnapshot =
   // await db.collection("noticias").get();
   //
@@ -57,6 +57,22 @@ void main() async {
     }
   });
 
+  //Aplicando filtros - codigo Professor curso
+  // uerySnapshot querySnapshot = await db.collection("usuarios")
+  // //.where("nome", isEqualTo: "jamilton")
+  // //.where("idade", isEqualTo: 31)
+  //     .where("idade", isGreaterThan: 15)//< menor, > maior, >= maior ou igual, <= menor ou igual
+  // //.where("idade", isLessThan: 30)
+  // //descendente (do maior para o menor) ascendente (do menor para o maior)
+  //     .orderBy("idade", descending: true )
+  //     .orderBy("nome", descending: false )
+  //     .limit(1)
+  //     .getDocuments();
+  //
+  // for( DocumentSnapshot item in querySnapshot.documents ){
+  //   var dados = item.data;
+  //   print("filtro nome: ${dados["nome"]} idade: ${dados["idade"]}");
+  // }
 
   print('Executei');
 
