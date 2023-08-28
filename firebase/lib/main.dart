@@ -95,6 +95,7 @@ _autenticacao() async{
   String senha = "123456";
 
 
+  //Crie o usuário e permanece logado.
   /*auth.createUserWithEmailAndPassword(
       email: email,
       password: senha
@@ -103,6 +104,19 @@ _autenticacao() async{
   }).catchError((erro){
     print("novo usuario: erro " + erro.toString() );
   });*/
+
+  //Desloga o usuário
+  //auth.signOut();
+
+  //Loga o usuário
+  auth.signInWithEmailAndPassword(
+      email: email,
+      password: senha
+  ).then((firebaseUser){
+    print("Logar usuario: sucesso!! e-mail: " + firebaseUser.toString() );
+  }).catchError((erro){
+    print("Logar usuario: erro " + erro.toString() );
+  });
 
   User? usuarioAtual = await auth.currentUser;
   if( usuarioAtual != null ){//logado
