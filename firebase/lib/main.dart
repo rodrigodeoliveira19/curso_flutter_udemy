@@ -1,7 +1,11 @@
+import 'dart:html';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
+
 
 void main() async {
   //_obterDados();
@@ -128,6 +132,64 @@ _autenticacao() async{
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container();
+  }
+}
+
+
+_selecinarImagemMain(){
+  return runApp(MaterialApp(
+    home: Home(),
+  ));
+}
+
+
+class Home extends StatefulWidget {
+  const Home({Key? key}) : super(key: key);
+
+  @override
+  State<Home> createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
+
+  // File _imagem;
+  //
+  // Future _recuperarImagem(bool daCamera) async {
+  //
+  //   File imagemSelecionada;
+  //   if( daCamera ){//camera
+  //     imagemSelecionada = await ImagePicker.pickImage(source: ImageSource.camera);
+  //   }else{//galeria
+  //     imagemSelecionada = await ImagePicker.pickImage(source: ImageSource.gallery);
+  //   }
+  //
+  //   setState(() {
+  //     _imagem = imagemSelecionada;
+  //   });
+  //
+  // }
+
+  final picker = ImagePicker();
+  late File imagemSelecionada;
+
+  _selecionarImagemGaleria()async{
+
+    final pickedFile = await picker.getImage(source: ImageSource.gallery);
+
+    imagemSelecionada = File(pickedFile.path);
+
+    if(imagemSelecionada != null){
+
+      setState(() {
+        _listaImagens.add(imagemSelecionada);
+      });
+
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
