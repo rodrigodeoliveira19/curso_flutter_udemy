@@ -12,6 +12,11 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   Completer<GoogleMapController> _controller = Completer();
+  CameraPosition _posicaoCamera = CameraPosition(
+      target: LatLng(-23.562436, -46.655005),
+      zoom: 16,
+      tilt: 0,
+      bearing: 270);
 
   //Marcadores de locais no mapa
   Set<Marker> _marcadores = {};
@@ -24,12 +29,11 @@ class _HomeState extends State<Home> {
 
   _movimentarCamera() async {
     GoogleMapController googleMapController = await _controller.future;
-    googleMapController.animateCamera(CameraUpdate.newCameraPosition(
-        CameraPosition(
-            target: LatLng(-23.562436, -46.655005),
-            zoom: 16,
-            tilt: 0,
-            bearing: 270)));
+    googleMapController.animateCamera(
+        CameraUpdate.newCameraPosition(
+        _posicaoCamera
+        )
+    );
   }
 
   _carregarMarcadores() {
@@ -145,6 +149,31 @@ class _HomeState extends State<Home> {
 
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
+
+    Marker marcadorUsuario = Marker(
+        markerId: MarkerId("marcador-usuario"),
+        position: LatLng(position.latitude, position.longitude),
+        infoWindow: InfoWindow(
+            title: "Meu local"
+        ),
+        icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueMagenta
+        ),
+        onTap: (){
+          print("Meu local clicado!!");
+        }
+      //rotation: 45
+    );
+
+    setState(() {
+      _marcadores.add(marcadorUsuario);
+      _posicaoCamera = CameraPosition(
+          target: LatLng(position.latitude, position.longitude),
+          zoom: 17
+      );
+      _movimentarCamera();
+    });
+
 
     //-23.570893, -46.644995
     //-23,570893, -46,644995
