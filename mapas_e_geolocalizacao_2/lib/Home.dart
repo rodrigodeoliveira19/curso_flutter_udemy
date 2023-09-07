@@ -14,9 +14,10 @@ class _HomeState extends State<Home> {
 
   //Marcadores de locais no mapa
   Set<Marker> _marcadores = {};
-
   //Marcadores de areas
   Set<Polygon> _polygons = {};
+  //Marcadores de linha
+  Set<Polyline> _polylines  = {};
 
   _movimentarCamera() async {
     GoogleMapController googleMapController = await _controller.future;
@@ -69,7 +70,7 @@ class _HomeState extends State<Home> {
     });*/
 
     //Marcador de area
-    Set<Polygon> listaPolygons = {};
+    /*Set<Polygon> listaPolygons = {};
     Polygon polygon1 = Polygon(
         polygonId: PolygonId("polygon1"),
         fillColor: Colors.green,
@@ -109,6 +110,30 @@ class _HomeState extends State<Home> {
 
     setState(() {
       _polygons = listaPolygons;
+    });*/
+
+    Set<Polyline> listaPolylines = {};
+    Polyline polyline = Polyline(
+        polylineId: PolylineId("polyline"),
+        color: Colors.red,
+        width: 10,
+        startCap: Cap.roundCap,
+        endCap: Cap.roundCap,
+        jointType: JointType.round,
+        points: [
+          LatLng(-23.563645, -46.653642),
+          LatLng(-23.565160, -46.651797),
+          LatLng(-23.563232, -46.648020),
+        ],
+        consumeTapEvents: true,
+        onTap: (){
+          print("clicado na área");
+        }
+    );
+
+    listaPolylines.add( polyline );
+    setState(() {
+      _polylines = listaPolylines;
     });
   }
 
@@ -128,7 +153,7 @@ class _HomeState extends State<Home> {
         floatingActionButton: FloatingActionButton(
             child: Icon(Icons.done), onPressed: _movimentarCamera),
         body: GoogleMap(
-          mapType: MapType.hybrid,
+          mapType: MapType.normal,
           initialCameraPosition: CameraPosition(
             target: LatLng(-23.563370, -46.652923),
             zoom: 16,
@@ -139,6 +164,7 @@ class _HomeState extends State<Home> {
           },
           markers: _marcadores,
           polygons: _polygons,
+          polylines: _polylines,
         ));
   }
 }
