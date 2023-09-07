@@ -12,6 +12,9 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   Completer<GoogleMapController> _controller = Completer();
 
+  //Marcadores de locais no mapa
+  Set<Marker> _marcadores = {};
+
   _movimentarCamera() async {
     GoogleMapController googleMapController = await _controller.future;
     googleMapController.animateCamera(
@@ -25,6 +28,53 @@ class _HomeState extends State<Home> {
         )
     );
 
+  }
+
+  _carregarMarcadores(){
+
+    Set<Marker> marcadoresLocal = {};
+
+    Marker marcadorShopping = Marker(
+        markerId: MarkerId("marcador-shopping"),
+        position: LatLng(-23.563371, -46.652924),
+        infoWindow: InfoWindow(
+            title: "Shopping Cidade São Paulo"
+        ),
+        icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueMagenta
+        ),
+        onTap: (){
+          print("Shopping clicado!!");
+        }
+      //rotation: 45
+    );
+
+    Marker marcadorCartorio = Marker(
+        markerId: MarkerId("marcador-cartorio"),
+        position: LatLng(-23.56122591994096, -46.65680722164037),
+        infoWindow: InfoWindow(
+            title: "12 Cartório de notas"
+        ),
+        icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueBlue
+        ),
+        onTap: (){
+          print("Cartório clicado!!");
+        }
+    );
+
+    marcadoresLocal.add( marcadorShopping );
+    marcadoresLocal.add( marcadorCartorio );
+
+    setState(() {
+      _marcadores = marcadoresLocal;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarMarcadores();
   }
 
   @override
@@ -41,13 +91,14 @@ class _HomeState extends State<Home> {
         body: GoogleMap(
           mapType: MapType.hybrid,
           initialCameraPosition: CameraPosition(
-            target: LatLng(-23.560774, -46.657284),
+            target: LatLng(-23.563370, -46.652923),
             zoom: 16,
           ),
           //Constroi o mapa
           onMapCreated: (GoogleMapController controller) {
             _controller.complete(controller);
           },
+          markers: _marcadores,
         ));
   }
 }
