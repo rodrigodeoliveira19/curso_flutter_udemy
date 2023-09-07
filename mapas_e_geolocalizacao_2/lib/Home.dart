@@ -12,11 +12,31 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   Completer<GoogleMapController> _controller = Completer();
 
+  _movimentarCamera() async {
+    GoogleMapController googleMapController = await _controller.future;
+    googleMapController.animateCamera(
+        CameraUpdate.newCameraPosition(
+            CameraPosition(
+                target: LatLng(-23.562436, -46.655005),
+                zoom: 16,
+                tilt: 0,
+                bearing: 270
+            )
+        )
+    );
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
           title: Text("Mapas e Geolocalização"),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.startTop,
+        floatingActionButton: FloatingActionButton(
+            child: Icon(Icons.done),
+            onPressed: _movimentarCamera
         ),
         body: GoogleMap(
           mapType: MapType.hybrid,
