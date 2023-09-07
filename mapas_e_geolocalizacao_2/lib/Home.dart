@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -14,10 +15,12 @@ class _HomeState extends State<Home> {
 
   //Marcadores de locais no mapa
   Set<Marker> _marcadores = {};
+
   //Marcadores de areas
   Set<Polygon> _polygons = {};
+
   //Marcadores de linha
-  Set<Polyline> _polylines  = {};
+  Set<Polyline> _polylines = {};
 
   _movimentarCamera() async {
     GoogleMapController googleMapController = await _controller.future;
@@ -126,21 +129,34 @@ class _HomeState extends State<Home> {
           LatLng(-23.563232, -46.648020),
         ],
         consumeTapEvents: true,
-        onTap: (){
+        onTap: () {
           print("clicado na área");
-        }
-    );
+        });
 
-    listaPolylines.add( polyline );
+    listaPolylines.add(polyline);
     setState(() {
       _polylines = listaPolylines;
     });
   }
 
+  _recuperarLocalizacaoAtual() async {
+    LocationPermission permission;
+    permission = await Geolocator.requestPermission();
+
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+
+    //-23.570893, -46.644995
+    //-23,570893, -46,644995
+
+    print("Ponto: localizacao atual: " + position.toString());
+  }
+
   @override
   void initState() {
     super.initState();
-    _carregarMarcadores();
+    //_carregarMarcadores();
+    _recuperarLocalizacaoAtual();
   }
 
   @override
