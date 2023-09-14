@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -181,11 +182,67 @@ class _HomeState extends State<Home> {
     print("Ponto: localizacao atual: " + position.toString());
   }
 
+  _recuperarLocalParaEndereco() async{
+    //Buscando Latitude e longitude a partir do endereço.
+    List<Location> listaEnderecos = await GeocodingPlatform
+        .instance.locationFromAddress("Gronausestraat 710, Enschede");
+
+    print("Endereços: "+listaEnderecos.toString());
+
+    //Outra forma
+    List<Location> locations = await locationFromAddress(
+        "Gronausestraat 710, Enschede"
+    );
+    print("Endereços2: "+locations.toString());
+
+
+    if( listaEnderecos != null && listaEnderecos.length > 0 ){
+
+      String resultado;
+
+      resultado  = "\n latitude " + listaEnderecos[0].latitude.toString();
+      resultado += "\n longitude " + listaEnderecos[0].longitude.toString() ;
+      resultado += "\n timestamp " + listaEnderecos[0].timestamp.toString() ;
+
+      print("resultado: " + resultado );
+
+    }
+
+    //Obtendo o endereço a partir da latitude e longitude. 
+
+    List<Placemark> placemarks = await placemarkFromCoordinates
+      (-23.564938, -46.650162);
+
+    if( placemarks != null && placemarks.length > 0 ){
+
+      Placemark endereco = placemarks[0];
+
+      String resultado;
+
+      resultado  = "\n administrativeArea " + endereco.administrativeArea.toString() ;
+      resultado += "\n subAdministrativeArea " + endereco.subAdministrativeArea.toString() ;
+      resultado += "\n locality " + endereco.locality.toString() ;
+      resultado += "\n subLocality " + endereco.subLocality.toString() ;
+      resultado += "\n thoroughfare " + endereco.thoroughfare.toString() ;
+      resultado += "\n subThoroughfare " + endereco.subThoroughfare.toString() ;
+      resultado += "\n postalCode " + endereco.postalCode.toString() ;
+      resultado += "\n country " + endereco.country.toString() ;
+      resultado += "\n isoCountryCode " + endereco.isoCountryCode.toString() ;
+
+      print("resultado: " + resultado );
+      //-23.565564, -46.652753
+
+    }
+
+  }
+
   @override
   void initState() {
     super.initState();
     //_carregarMarcadores();
-    _recuperarLocalizacaoAtual();
+    //_recuperarLocalizacaoAtual();
+
+    _recuperarLocalParaEndereco();
   }
 
   @override
