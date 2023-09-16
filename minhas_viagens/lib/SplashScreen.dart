@@ -19,6 +19,7 @@ class _SplashScreenState extends State<SplashScreen> {
     Chame a Home.
     * */
     Timer(Duration(seconds: 5), (){
+      //Chama a nova interface e finaliza a atual
       Navigator.pushReplacement(context, 
           MaterialPageRoute(builder: (_)=> Home())
       );
