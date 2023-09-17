@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Mapa extends StatefulWidget {
   const Mapa({Key? key}) : super(key: key);
@@ -27,7 +28,7 @@ class _MapaState extends State<Mapa> {
     _controller.complete(controller);
   }
 
-  _exibirMarcador(LatLng latLng) async{
+  _adicionarMarcador(LatLng latLng) async{
 
     List<Placemark> placemarks = await placemarkFromCoordinates
       (latLng.latitude, latLng.longitude);
@@ -47,6 +48,7 @@ class _MapaState extends State<Mapa> {
 
       setState(() {
         _marcadores.add(marcador);
+        _salvarLocalizacaoNoFirebase(rua,latLng); 
       });
     }
 
@@ -86,6 +88,21 @@ class _MapaState extends State<Mapa> {
     );
   }
 
+  _salvarLocalizacaoNoFirebase(String localizacao, LatLng latLng) async{
+    //Inicializar Firebase
+    WidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp();
+
+    Map<String,dynamic> viagens = Map();
+    viagens['localizacao'] = localizacao;
+    viagens['latitude'] = latLng.latitude;
+    viagens['longitude'] = latLng.longitude;
+
+    FirebaseFirestore db = FirebaseFirestore.instance;
+    db.collection("viagens")
+        .add(viagens);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -104,7 +121,7 @@ class _MapaState extends State<Mapa> {
           initialCameraPosition: _posicaoCamera,
           //Constroi o mapa
           onMapCreated: _onMapCreated,
-          onLongPress: _exibirMarcador,
+          onLongPress: _adicionarMarcador,
           markers: _marcadores,
         ),
       ),
