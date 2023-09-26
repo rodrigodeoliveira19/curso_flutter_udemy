@@ -48,7 +48,7 @@ class _MapaState extends State<Mapa> {
 
       setState(() {
         _marcadores.add(marcador);
-        _salvarLocalizacaoNoFirebase(rua,latLng); 
+        _salvarLocalizacaoNoFirebase(rua,latLng);
       });
     }
 
