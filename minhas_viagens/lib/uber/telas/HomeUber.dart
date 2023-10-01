@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:minhas_viagens/uber/telas/Cadastro.dart';
 
 class HomeUber extends StatefulWidget {
   const HomeUber({Key? key}) : super(key: key);
@@ -88,7 +89,10 @@ class _HomeUberState extends State<HomeUber> {
                         style: TextStyle(color: Colors.white),
                       ),
                       onTap: (){
-
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => Cadastro())
+                        ); 
                       },
                     ),
                   ),
