@@ -89,10 +89,11 @@ class _HomeUberState extends State<HomeUber> {
                         style: TextStyle(color: Colors.white),
                       ),
                       onTap: (){
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => Cadastro())
-                        ); 
+                        // Navigator.push(
+                        //     context,
+                        //     MaterialPageRoute(builder: (context) => Cadastro())
+                        // );
+                        Navigator.pushNamed(context, "/cadastro");
                       },
                     ),
                   ),
