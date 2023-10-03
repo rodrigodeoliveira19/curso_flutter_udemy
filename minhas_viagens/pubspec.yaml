@@ -51,6 +51,7 @@ dev_dependencies:
   geocoding: ^2.1.0
   firebase_core: ^2.15.1 # Recursos Básicos
   cloud_firestore: ^4.9.0 # Banco de Dados
+  firebase_auth: ^4.8.0 # Autenticação de Usuários
 
 
 # For information on the generic Dart part of this file, see the
