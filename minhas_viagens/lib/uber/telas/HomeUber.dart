@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:minhas_viagens/uber/telas/Cadastro.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+
+import '../model/Usuario.dart';
 
 class HomeUber extends StatefulWidget {
   const HomeUber({Key? key}) : super(key: key);
@@ -10,8 +14,59 @@ class HomeUber extends StatefulWidget {
 
 class _HomeUberState extends State<HomeUber> {
 
-  TextEditingController _controllerEmail = TextEditingController();
-  TextEditingController _controllerSenha = TextEditingController();
+  TextEditingController _controllerEmail = TextEditingController(text: "rodrigo@gmail.com" );
+  TextEditingController _controllerSenha = TextEditingController(text: "123456");
+  String _mensagemError = "";
+
+  void _validarCampos(){
+    String email = _controllerEmail.text;
+    String senha = _controllerSenha.text;
+
+    if(email.isNotEmpty && email.contains("@")){
+      if(senha.isNotEmpty && senha.length > 5){
+        Usuario usuario = Usuario();
+        usuario.email = email;
+        usuario.senha = senha;
+
+        _logarUsuario(usuario);
+
+      }else{
+        setState(() {
+          _mensagemError = "Preencha a senha";
+        });
+      }
+    }else{
+      setState(() {
+        _mensagemError = "Preencha o e-mail";
+      });
+    }
+  }
+
+  _logarUsuario(Usuario usuario) async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp();
+
+    FirebaseAuth auth = FirebaseAuth.instance;
+
+    //Loga o usuário
+    auth
+        .signInWithEmailAndPassword(
+            email: usuario.email, password: usuario.senha)
+        .then((firebaseUser) {
+      print("Logar usuario: sucesso!! e-mail: " + firebaseUser.toString());
+      Navigator.pushReplacementNamed(
+          context,
+          "/painel-passageiro"
+      );
+      
+    }).catchError((erro) {
+      print("Logar usuario: erro " + erro.toString());
+      setState(() {
+        _mensagemError = "Erro ao autenticar o usuário. "
+            "Verifique os dados e tente novamente."; 
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,8 +125,7 @@ class _HomeUberState extends State<HomeUber> {
                   Padding(
                     padding: EdgeInsets.only(top: 16, bottom: 10),
                     child: ElevatedButton(
-                      onPressed:(){
-                      },
+                      onPressed: _validarCampos,
                       child: Text(
                         "Entrar",
                         style: TextStyle(fontSize: 20, color: Colors.white),
@@ -101,7 +155,7 @@ class _HomeUberState extends State<HomeUber> {
                     padding: EdgeInsets.only(top: 16),
                     child: Center(
                       child: Text(
-                        "Erro",
+                        _mensagemError,
                         style: TextStyle(color: Colors.red, fontSize: 20),
                       ),
                     ),
