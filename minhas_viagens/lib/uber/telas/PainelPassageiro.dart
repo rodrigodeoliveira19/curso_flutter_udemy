@@ -20,7 +20,7 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
   Completer<GoogleMapController> _mapController = Completer();
   CameraPosition _posicaoCamera = CameraPosition(
     target: LatLng(-23.563370, -46.652923),
-    zoom: 16,
+    //zoom: 16,
   );
 
   _deslogarUsuario() async {
@@ -54,7 +54,8 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
       accuracy: LocationAccuracy.high,
       distanceFilter: 100,
     );
-    StreamSubscription<Position> positionStream =
+
+    // StreamSubscription<Position> positionStream =
     Geolocator.getPositionStream(locationSettings: locationSettings)
         .listen((Position position) {
       print(position == null
@@ -64,7 +65,7 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
       setState(() {
         _posicaoCamera = CameraPosition(
             target: LatLng(position.latitude, position.longitude),
-            zoom: 16
+            zoom: 19
         );
         _movimentarCamera();
       });
@@ -115,6 +116,8 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
           initialCameraPosition: _posicaoCamera,
           //Constroi o mapa
           onMapCreated: _onMapCreated,
+          myLocationButtonEnabled: true,
+          myLocationEnabled: true,
           //onLongPress: _adicionarMarcador,
           //markers: _marcadores,
         ),
