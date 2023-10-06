@@ -43,9 +43,9 @@ class Usuario{
     _nome = value;
   }
 
-  String get isUsuario => _idUsuario;
+  String get idUsuario => _idUsuario;
 
-  set isUsuario(String value) {
+  set idUsuario(String value) {
     _idUsuario = value;
   }
 }
