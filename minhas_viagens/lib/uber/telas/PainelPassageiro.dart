@@ -3,8 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import 'dart:async';
 import 'dart:io';
+
+import '../model/Destino.dart';
 
 class PainelPassageiro extends StatefulWidget {
   const PainelPassageiro({Key? key}) : super(key: key);
@@ -15,11 +18,16 @@ class PainelPassageiro extends StatefulWidget {
 
 class _PainelPassageiroState extends State<PainelPassageiro> {
   List<String> itensMenu = ["Configurações", "Deslogar"];
+  TextEditingController _controllerDestino =
+      TextEditingController(text: "Av. Paulista");
   Completer<GoogleMapController> _mapController = Completer();
   CameraPosition _posicaoCamera = CameraPosition(
     target: LatLng(-23.563370, -46.652923),
     //zoom: 16,
   );
+
+  //Marcadores de locais no mapa
+  Set<Marker> _marcadores = {};
 
   _deslogarUsuario() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -62,7 +70,9 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
 
       setState(() {
         _posicaoCamera = CameraPosition(
-            target: LatLng(position.latitude, position.longitude), zoom: 19);
+            target: LatLng(position.latitude, position.longitude), zoom: 19
+        );
+        _exibirMarcadorPassageiro(position);
         _movimentarCamera();
       });
     });
@@ -72,6 +82,104 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
     GoogleMapController googleMapController = await _mapController.future;
     googleMapController
         .animateCamera(CameraUpdate.newCameraPosition(_posicaoCamera));
+  }
+
+  void _exibirMarcadorPassageiro(Position position) async{
+    double pixelRatio = MediaQuery.of(context).devicePixelRatio;
+
+    BitmapDescriptor.fromAssetImage(
+        ImageConfiguration(devicePixelRatio: pixelRatio),
+        "imagens/uber/passageiro.png"
+    ).then((BitmapDescriptor icon) {
+
+      Marker marcadorPassageiro = Marker(
+          markerId: MarkerId("${position.latitude} - "
+              "${position.longitude} - "
+              "marcador-passageiro"),
+          position: LatLng(position.latitude, position.longitude),
+          infoWindow: InfoWindow(
+              title: "Meu Local"
+          ),
+          icon: icon,
+          onTap: () {
+            print("Cartório clicado!!");
+          }
+      );
+
+      setState(() {
+        _marcadores.add(marcadorPassageiro);
+      });
+
+    });
+  }
+
+  void _chamarUber() async{
+    String enderecoDestino = _controllerDestino.text;
+    if(enderecoDestino.isNotEmpty){
+
+      List<Location> locations = await locationFromAddress(
+          _controllerDestino.text
+      );
+      print("Endereços2: "+locations.toString());
+
+      if( locations != null && locations.length > 0 ){
+
+        //Obtendo o endereço a partir da latitude e longitude.
+        List<Placemark> placemarks = await placemarkFromCoordinates
+          (locations[0].latitude, locations[0].longitude);
+
+        if( placemarks != null && placemarks.length > 0 ){
+
+          Placemark endereco = placemarks[0];
+
+          Destino destino = Destino();
+          destino.cidade = endereco.subAdministrativeArea!;
+          destino.cep = endereco.postalCode!;
+          destino.bairro = endereco.subLocality!;
+          destino.rua = endereco.thoroughfare!;
+          destino.numero = endereco.subThoroughfare!;
+
+          destino.latitude = locations[0].latitude;
+          destino.longitude = locations[0].longitude;
+
+          String enderecoConfirmacao;
+          enderecoConfirmacao = "\n Cidade: " + destino.cidade;
+          enderecoConfirmacao += "\n Rua: " + destino.rua + ", " + destino.numero ;
+          enderecoConfirmacao += "\n Bairro: " + destino.bairro ;
+          enderecoConfirmacao += "\n Cep: " + destino.cep ;
+
+          showDialog(
+              context: context,
+              builder: (contex){
+                return AlertDialog(
+                  title: Text("Confirmação do endereço"),
+                  content: Text(enderecoConfirmacao),
+                  contentPadding: EdgeInsets.all(16),
+                  actions: <Widget>[
+                    ElevatedButton(
+                      child: Text("Cancelar", style: TextStyle(color: Colors.red),),
+                      onPressed: () => Navigator.pop(contex),
+                    ),
+                    ElevatedButton(
+                      child: Text("Confirmar", style: TextStyle(color: Colors.green),),
+                      onPressed: (){
+
+                        //salvar requisicao
+                        //_salvarRequisicao();
+
+                        Navigator.pop(contex);
+
+                      },
+                    )
+                  ],
+                );
+              }
+          );
+
+        }
+      }
+
+    }
   }
 
   @override
@@ -112,7 +220,7 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
             myLocationEnabled: true,
             zoomControlsEnabled: false,
             //onLongPress: _adicionarMarcador,
-            //markers: _marcadores,
+            markers: _marcadores,
           ),
           Positioned(
             top: 0,
@@ -160,6 +268,7 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
                     borderRadius: BorderRadius.circular(3),
                     color: Colors.white),
                 child: TextField(
+                  controller: _controllerDestino,
                   decoration: InputDecoration(
                       icon: Container(
                         margin: EdgeInsets.only(left: 20),
@@ -186,7 +295,7 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
                   ? EdgeInsets.fromLTRB(20, 10, 20, 25)
                   : EdgeInsets.all(10),
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: _chamarUber,
                 child: Text(
                   "Chamar uber",
                   style: TextStyle(fontSize: 20, color: Colors.white),
