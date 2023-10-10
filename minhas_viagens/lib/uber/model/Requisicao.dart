@@ -29,6 +29,7 @@ class Requisicao{
     };
 
     Map<String, dynamic> dadosRequisicao = {
+      "id" : this.id,
       "status" : this.status,
       "passageiro" : dadosPassageiro,
       "motorista" : null,

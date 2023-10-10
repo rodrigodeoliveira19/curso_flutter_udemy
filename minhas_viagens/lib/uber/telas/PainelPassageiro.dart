@@ -38,7 +38,7 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
   bool _exibirCaixaEnderecoDestino = true;
   String _textoBotao = "Chamar Uber";
   Color _corBotao = Colors.blue;
-  late Function _funcaoBotao;
+  var _funcaoBotao;
 
   _deslogarUsuario() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -194,9 +194,21 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
     requisicao.passageiro = usuario;
 
     FirebaseFirestore db = FirebaseFirestore.instance;
-    db.collection("requisicoes").add(requisicao.toMap());
+    //Obtem o id disponivel antes de realizar inserção.
+    String idRequisicao = db.collection("requisicoes").doc().id;
+    requisicao.id = idRequisicao;
+    db.collection("requisicoes").doc(idRequisicao).set(requisicao.toMap());
 
-    _statusAguardando();
+    //Salvar requisição ativa
+    Map<String, dynamic> dadosRequisicaoAtiva = {};
+    dadosRequisicaoAtiva["id_requisicao"] = requisicao.id;
+    dadosRequisicaoAtiva["id_usuario"] = usuario.idUsuario;
+    dadosRequisicaoAtiva["status"] = StatusRequisicao.AGUARDANDO;
+
+    db
+        .collection("requisicao_ativa")
+        .doc(usuario.idUsuario)
+        .set(dadosRequisicaoAtiva);
   }
 
   _statusUberNaoChamado(){
@@ -232,11 +244,55 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
   _cancelarUber(){
   }
 
+  _adicionarListenerRequisicaoAtiva() async {
+    User? user = await UsuarioFirebase.getUsuarioAtual();
+
+    FirebaseFirestore db = FirebaseFirestore.instance;
+    await db
+        .collection("requisicao_ativa")
+        .doc(user?.uid)
+        .snapshots()
+        .listen((snapshot) {
+      //print("dados recuperados: " + snapshot.data.toString() );
+
+      /*
+            Caso tenha uma requisicao ativa
+              -> altera interface de acordo com status
+            Caso não tenha
+              -> Exibe interface padrão para chamar uber
+        */
+      if( snapshot.data() != null ){
+
+        var dados = snapshot.data() as Map;
+        String status = dados["status"];
+        String idRequisicao = dados["id_requisicao"];
+
+        switch( status ){
+          case StatusRequisicao.AGUARDANDO :
+            _statusAguardando();
+            break;
+          case StatusRequisicao.A_CAMINHO :
+
+            break;
+          case StatusRequisicao.VIAGEM :
+
+            break;
+          case StatusRequisicao.FINALIZADA :
+
+            break;
+        }
+      }else{
+        _statusUberNaoChamado();
+      }
+    });
+  }
+
 
   @override
   void initState() {
     super.initState();
     _adicionarListenerLocalizacao();
+    _adicionarListenerRequisicaoAtiva();
   }
 
   @override
@@ -354,7 +410,7 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
                   ? EdgeInsets.fromLTRB(20, 10, 20, 25)
                   : EdgeInsets.all(10),
               child: ElevatedButton(
-                onPressed: _chamarUber, // _funcaoBotao
+                onPressed: _funcaoBotao, // _funcaoBotao _chamarUber
                 child: Text(
                   _textoBotao,
                   style: TextStyle(fontSize: 20, color: Colors.white),
