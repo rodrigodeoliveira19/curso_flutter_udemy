@@ -39,6 +39,7 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
   String _textoBotao = "Chamar Uber";
   Color _corBotao = Colors.blue;
   var _funcaoBotao;
+  late String _idRequisicao;
 
   _deslogarUsuario() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -211,18 +212,14 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
         .set(dadosRequisicaoAtiva);
   }
 
-  _statusUberNaoChamado(){
+  _statusUberNaoChamado() {
     _exibirCaixaEnderecoDestino = true;
-    _alterarBotaoPrincipal(
-        "Chamar uber",
-        Color(0xff1ebbd8),
-            (){
-          _chamarUber();
-        }
-    );
+    _alterarBotaoPrincipal("Chamar uber", Color(0xff1ebbd8), () {
+      _chamarUber();
+    });
   }
 
-  _alterarBotaoPrincipal(String texto, Color cor, Function funcao){
+  _alterarBotaoPrincipal(String texto, Color cor, Function funcao) {
     setState(() {
       _textoBotao = texto;
       _corBotao = cor;
@@ -230,18 +227,21 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
     });
   }
 
-  _statusAguardando(){
+  _statusAguardando() {
     _exibirCaixaEnderecoDestino = false;
-    _alterarBotaoPrincipal(
-        "Cancelar",
-        Colors.red,
-            (){
-          _cancelarUber();
-        }
-    );
+    _alterarBotaoPrincipal("Cancelar", Colors.red, () {
+      _cancelarUber();
+    });
   }
 
-  _cancelarUber(){
+  _cancelarUber() async {
+    User? user = await UsuarioFirebase.getUsuarioAtual();
+    FirebaseFirestore db = FirebaseFirestore.instance;
+    await db
+        .collection("requisicoes")
+        .doc(_idRequisicao)
+        .update({"status": StatusRequisicao.CANCELADA}).then(
+            (_) => {db.collection("requisicao_ativa").doc(user?.uid).delete()});
   }
 
   _adicionarListenerRequisicaoAtiva() async {
@@ -261,32 +261,27 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
             Caso não tenha
               -> Exibe interface padrão para chamar uber
         */
-      if( snapshot.data() != null ){
-
+      if (snapshot.data() != null) {
         var dados = snapshot.data() as Map;
         String status = dados["status"];
-        String idRequisicao = dados["id_requisicao"];
+        _idRequisicao = dados["id_requisicao"];
 
-        switch( status ){
-          case StatusRequisicao.AGUARDANDO :
+        switch (status) {
+          case StatusRequisicao.AGUARDANDO:
             _statusAguardando();
             break;
-          case StatusRequisicao.A_CAMINHO :
-
+          case StatusRequisicao.A_CAMINHO:
             break;
-          case StatusRequisicao.VIAGEM :
-
+          case StatusRequisicao.VIAGEM:
             break;
-          case StatusRequisicao.FINALIZADA :
-
+          case StatusRequisicao.FINALIZADA:
             break;
         }
-      }else{
+      } else {
         _statusUberNaoChamado();
       }
     });
   }
-
 
   @override
   void initState() {
