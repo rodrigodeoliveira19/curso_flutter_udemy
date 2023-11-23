@@ -9,6 +9,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../util/StatusRequisicao.dart';
+
 class Corrida extends StatefulWidget {
   String idRequisicao;
 
@@ -32,6 +34,9 @@ class _CorridaState extends State<Corrida> {
   String _textoBotao = "Aceitar corrida";
   Color _corBotao = Colors.blue;
   var _funcaoBotao;
+
+  //Requisicao
+  late Map<String,dynamic> _dadosRequisicao;
 
   _alterarBotaoPrincipal(String texto, Color cor, Function funcao) {
     setState(() {
@@ -99,10 +104,62 @@ class _CorridaState extends State<Corrida> {
     });
   }
 
+  _recuperarRequisicao() async{
+    String idRequisicao = widget.idRequisicao;
+
+    FirebaseFirestore db = FirebaseFirestore.instance;
+    //Get Requisicao
+    DocumentSnapshot snapshot =
+    await db.collection("requisicoes").doc( idRequisicao ).get();
+
+    _dadosRequisicao = snapshot.data() as Map<String,dynamic>;
+
+    _adicionarListenerRequisicao();
+
+  }
+
+  _adicionarListenerRequisicao() async {
+    FirebaseFirestore db = FirebaseFirestore.instance;
+    String idRequisicao = _dadosRequisicao["id"];
+    await db
+        .collection("requisicoes")
+        .doc(idRequisicao)
+        .snapshots()
+        .listen((event) {
+      if (event.data() != null) {
+        var requisicao = event.data() as Map;
+        String status = requisicao["status"];
+
+        switch (status) {
+          case StatusRequisicao.AGUARDANDO:
+            _statusAguardando();
+            break;
+          case StatusRequisicao.A_CAMINHO:
+            break;
+          case StatusRequisicao.VIAGEM:
+            break;
+          case StatusRequisicao.FINALIZADA:
+            break;
+        }
+
+      }
+    });
+  }
+
+  _statusAguardando() {
+    _alterarBotaoPrincipal("Aceitar Corrida", Color(0xff1ebbd8), () {
+      _aceitarCorrida();
+    });
+  }
+
+  _aceitarCorrida(){}
+
   @override
   void initState() {
     super.initState();
     _adicionarListenerLocalizacao();
+
+    _recuperarRequisicao();
   }
 
   @override
