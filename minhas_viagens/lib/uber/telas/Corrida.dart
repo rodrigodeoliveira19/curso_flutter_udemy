@@ -9,7 +9,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../model/Usuario.dart';
 import '../util/StatusRequisicao.dart';
+import '../util/UsuarioFirebase.dart';
 
 class Corrida extends StatefulWidget {
   String idRequisicao;
@@ -29,6 +31,7 @@ class _CorridaState extends State<Corrida> {
 
   //Marcadores de locais no mapa
   Set<Marker> _marcadores = {};
+  late Position _localMotorista;
 
   // Controles para exibição de componentes na tela.
   String _textoBotao = "Aceitar corrida";
@@ -70,7 +73,9 @@ class _CorridaState extends State<Corrida> {
             target: LatLng(position.latitude, position.longitude), zoom: 19);
         _exibirMarcadorPassageiro(position);
         _movimentarCamera();
+        _localMotorista = position;
       });
+
     });
   }
 
@@ -135,6 +140,7 @@ class _CorridaState extends State<Corrida> {
             _statusAguardando();
             break;
           case StatusRequisicao.A_CAMINHO:
+            _statusACaminho();
             break;
           case StatusRequisicao.VIAGEM:
             break;
@@ -152,7 +158,39 @@ class _CorridaState extends State<Corrida> {
     });
   }
 
-  _aceitarCorrida(){}
+  _statusACaminho() {
+    _alterarBotaoPrincipal("Motorista a caminho", Color(0xff1ebbd8), (){});
+  }
+
+  _aceitarCorrida() async{
+    //Recuperar dados do Motorista
+    Usuario usuarioMotorista = await UsuarioFirebase.getUsuarioLogado();
+    usuarioMotorista.latitude = _localMotorista.latitude;
+    usuarioMotorista.longitude = _localMotorista.longitude;
+
+    FirebaseFirestore db = FirebaseFirestore.instance;
+    String idRequisicao = _dadosRequisicao["id"];
+
+    db.collection("requisicoes").doc(idRequisicao).update({
+      "motorista": usuarioMotorista.toMap(),
+      "status": StatusRequisicao.A_CAMINHO
+    }).then((_) {
+      //Atualizar requisição ativa do passageiro
+      String idPassageiro = _dadosRequisicao["passageiro"]["idUsuario"];
+      db
+          .collection("requisicao_ativa")
+          .doc(idPassageiro)
+          .update({"status": StatusRequisicao.A_CAMINHO});
+
+      //Salvar requisição ativa para motorista
+      String idMotorista = usuarioMotorista.idUsuario;
+      db.collection("requisicao_ativa_motorista").doc(idMotorista).set({
+        "idRequisicao": idRequisicao,
+        "id_usuario": idMotorista,
+        "status": StatusRequisicao.A_CAMINHO
+      });
+    });
+  }
 
   @override
   void initState() {

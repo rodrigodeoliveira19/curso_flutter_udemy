@@ -5,6 +5,15 @@ class Usuario{
   late String _senha;
   late String _tipoUsuario;
 
+  late double _latitude;
+  late double _longitude;
+
+  double get latitude => _latitude;
+
+  set latitude(double value) {
+    _latitude = value;
+  }
+
   Usuario();
 
   String verificaTipoUsuario(bool tipoUsuario){
@@ -16,6 +25,8 @@ class Usuario{
       "nome" : _nome,
       "email" : _email,
       "tipoUsuario" : _tipoUsuario,
+      "latitude" : _latitude,
+      "longitude" : _longitude,
     };
   }
 
@@ -47,5 +58,11 @@ class Usuario{
 
   set idUsuario(String value) {
     _idUsuario = value;
+  }
+
+  double get longitude => _longitude;
+
+  set longitude(double value) {
+    _longitude = value;
   }
 }
