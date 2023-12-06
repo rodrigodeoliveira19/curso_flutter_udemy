@@ -6,6 +6,7 @@ import 'package:minhas_viagens/uber/model/Usuario.dart';
 
 class UsuarioFirebase{
 
+  //Retorna o usuario autenticado
   static Future<User?> getUsuarioAtual() async{
     WidgetsFlutterBinding.ensureInitialized();
     await Firebase.initializeApp();

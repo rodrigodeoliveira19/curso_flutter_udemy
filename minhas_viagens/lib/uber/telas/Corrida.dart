@@ -185,7 +185,7 @@ class _CorridaState extends State<Corrida> {
       //Salvar requisição ativa para motorista
       String idMotorista = usuarioMotorista.idUsuario;
       db.collection("requisicao_ativa_motorista").doc(idMotorista).set({
-        "idRequisicao": idRequisicao,
+        "id_requisicao": idRequisicao,
         "id_usuario": idMotorista,
         "status": StatusRequisicao.A_CAMINHO
       });

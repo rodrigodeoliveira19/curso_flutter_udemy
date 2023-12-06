@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../util/StatusRequisicao.dart';
+import '../util/UsuarioFirebase.dart';
 
 class PainelMotorista extends StatefulWidget {
   const PainelMotorista({Key? key}) : super(key: key);
@@ -52,10 +53,32 @@ class _PainelMotoristaState extends State<PainelMotorista> {
     });
   }
 
+  _recuperarRequisicaoAtivaMotorista() async {
+    User? user = await UsuarioFirebase.getUsuarioAtual();
+
+    FirebaseFirestore db = FirebaseFirestore.instance;
+    DocumentSnapshot snapshot =
+        await db.collection("requisicao_ativa_motorista").doc(user?.uid).get();
+    var dadosRequisicao = snapshot.data() as Map;
+
+    if(dadosRequisicao == null){
+      _adicionarListenerRequisicoes();
+    }else{
+      /*Sera direcionado para tela de corrida sem opção de voltar*/
+      String idRequisicao = dadosRequisicao["id_requisicao"];
+      Navigator.pushReplacementNamed(context, "/corrida",
+          arguments: idRequisicao);
+    }
+
+  }
+
   @override
   void initState() {
     super.initState();
-    _adicionarListenerRequisicoes();
+    /* Recuéra a requisição ativa para verificar se o motorista está atendendo
+    alguma requisição e envia ele para a tela de corrida
+    * */
+    _recuperarRequisicaoAtivaMotorista();
   }
 
   @override
