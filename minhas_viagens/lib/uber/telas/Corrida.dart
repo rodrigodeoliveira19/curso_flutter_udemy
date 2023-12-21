@@ -90,12 +90,12 @@ class _CorridaState extends State<Corrida> {
 
     BitmapDescriptor.fromAssetImage(
             ImageConfiguration(devicePixelRatio: pixelRatio),
-            "imagens/uber/motorista.png")
+            "imagens/uber/passageiro.png")
         .then((BitmapDescriptor icon) {
       Marker marcadorPassageiro = Marker(
           markerId: MarkerId("${position.latitude} - "
               "${position.longitude} - "
-              "marcador-motorista"),
+              "marcador-passageiro"),
           position: LatLng(position.latitude, position.longitude),
           infoWindow: InfoWindow(title: "Meu Local"),
           icon: icon,
@@ -160,6 +160,57 @@ class _CorridaState extends State<Corrida> {
 
   _statusACaminho() {
     _alterarBotaoPrincipal("Motorista a caminho", Color(0xff1ebbd8), (){});
+
+    double latitudePassageiro = _dadosRequisicao["passageiro"]["latitude"];
+    double longitudePassageiro = _dadosRequisicao["passageiro"]["longitude"];
+
+    double latitudeMotorista = _dadosRequisicao["motorista"]["latitude"];
+    double longitudeMotorista = _dadosRequisicao["motorista"]["longitude"];
+
+    _exibirDoisMarcadores(LatLng(latitudePassageiro, longitudePassageiro),
+        LatLng(latitudeMotorista, longitudeMotorista));
+  }
+
+  //Exibe o marcador do passageiro e do motorista na interface
+  _exibirDoisMarcadores(LatLng latLngPassageiro, LatLng latLngMotorista){
+    double pixelRatio = MediaQuery.of(context).devicePixelRatio;
+
+    Set<Marker> _listaMarcadores = {};
+    BitmapDescriptor.fromAssetImage(
+        ImageConfiguration(devicePixelRatio: pixelRatio),
+        "imagens/uber/motorista.png")
+        .then((BitmapDescriptor icon) {
+      Marker marcadorMotorista = Marker(
+          markerId: MarkerId("${latLngMotorista.latitude} - "
+              "${latLngMotorista.longitude} - "
+              "marcador-motorista"),
+          position: latLngMotorista,
+          infoWindow: InfoWindow(title: "Local Motorista"),
+          icon: icon);
+
+      _listaMarcadores.add(marcadorMotorista);
+    });
+
+    BitmapDescriptor.fromAssetImage(
+        ImageConfiguration(devicePixelRatio: pixelRatio),
+        "imagens/uber/passageiro.png")
+        .then((BitmapDescriptor icon) {
+      Marker marcadorPassageiro = Marker(
+          markerId: MarkerId("${latLngPassageiro.latitude} - "
+              "${latLngPassageiro.longitude} - "
+              "marcador-passageiro"),
+          position: latLngPassageiro,
+          infoWindow: InfoWindow(title: "Local passageiro"),
+          icon: icon);
+
+      _listaMarcadores.add(marcadorPassageiro);
+    });
+
+    setState(() {
+      _marcadores = _listaMarcadores;
+      _posicaoCamera = CameraPosition(target: latLngMotorista, zoom: 25);
+      _movimentarCamera();
+    });
   }
 
   _aceitarCorrida() async{

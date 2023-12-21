@@ -40,6 +40,7 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
   Color _corBotao = Colors.blue;
   var _funcaoBotao;
   late String _idRequisicao;
+  late Position _localPassageiro;
 
   _deslogarUsuario() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -83,6 +84,7 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
       setState(() {
         _posicaoCamera = CameraPosition(
             target: LatLng(position.latitude, position.longitude), zoom: 19);
+        _localPassageiro = position;
         _exibirMarcadorPassageiro(position);
         _movimentarCamera();
       });
@@ -188,6 +190,8 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
 
   Future<void> _salvarRequisicao(Destino destino) async {
     Usuario usuario = await UsuarioFirebase.getUsuarioLogado();
+    usuario.latitude = destino.latitude;
+    usuario.longitude = destino.longitude;
 
     Requisicao requisicao = Requisicao();
     requisicao.destino = destino;

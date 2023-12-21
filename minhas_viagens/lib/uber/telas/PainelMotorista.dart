@@ -23,6 +23,7 @@ class _PainelMotoristaState extends State<PainelMotorista> {
   final _streamController = StreamController<QuerySnapshot>.broadcast();
   FirebaseFirestore db = FirebaseFirestore.instance;
 
+
   _deslogarUsuario() async {
     WidgetsFlutterBinding.ensureInitialized();
     await Firebase.initializeApp();
@@ -59,7 +60,9 @@ class _PainelMotoristaState extends State<PainelMotorista> {
     FirebaseFirestore db = FirebaseFirestore.instance;
     DocumentSnapshot snapshot =
         await db.collection("requisicao_ativa_motorista").doc(user?.uid).get();
-    var dadosRequisicao = snapshot.data() as Map;
+    var dadosRequisicao;
+    if(snapshot.data() != null)
+     dadosRequisicao = snapshot.data() as Map;
 
     if(dadosRequisicao == null){
       _adicionarListenerRequisicoes();
