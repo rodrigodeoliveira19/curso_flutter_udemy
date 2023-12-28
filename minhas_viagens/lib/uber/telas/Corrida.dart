@@ -72,7 +72,7 @@ class _CorridaState extends State<Corrida> {
         _posicaoCamera = CameraPosition(
             target: LatLng(position.latitude, position.longitude), zoom: 19);
         _exibirMarcadorPassageiro(position);
-        _movimentarCamera();
+        // _movimentarCamera();
         _localMotorista = position;
       });
 
@@ -169,6 +169,37 @@ class _CorridaState extends State<Corrida> {
 
     _exibirDoisMarcadores(LatLng(latitudePassageiro, longitudePassageiro),
         LatLng(latitudeMotorista, longitudeMotorista));
+
+    var northLat, northLong, sountLat, sountLong;
+    if(latitudeMotorista <= latitudePassageiro){
+      sountLat = latitudeMotorista;
+      northLat = latitudePassageiro;
+    }else{
+      sountLat = latitudePassageiro;
+      northLat = latitudeMotorista;
+    }
+
+    if(longitudeMotorista <= longitudePassageiro){
+      sountLong = longitudeMotorista;
+      northLong = longitudePassageiro;
+    }else{
+      sountLong = longitudePassageiro;
+      northLong = longitudeMotorista;
+    }
+    _movimentarCameraBounds(
+        LatLngBounds(southwest: LatLng(sountLat, sountLong),
+            northeast: LatLng(northLat, northLong))
+    );
+  }
+
+  /*Centraliza os marcadores no mapa.
+  Requisito 'southwest.latitude <= northeast.latitude'
+  Valores de sudoeste devem ser menores.
+  * */
+  _movimentarCameraBounds(LatLngBounds latLngBounds) async {
+    GoogleMapController googleMapController = await _mapController.future;
+    googleMapController
+        .animateCamera(CameraUpdate.newLatLngBounds(latLngBounds, 100));
   }
 
   //Exibe o marcador do passageiro e do motorista na interface
@@ -208,8 +239,8 @@ class _CorridaState extends State<Corrida> {
 
     setState(() {
       _marcadores = _listaMarcadores;
-      _posicaoCamera = CameraPosition(target: latLngMotorista, zoom: 25);
-      _movimentarCamera();
+      // _posicaoCamera = CameraPosition(target: latLngMotorista, zoom: 25);
+      // _movimentarCamera();
     });
   }
 
