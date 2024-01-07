@@ -128,12 +128,12 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
           await locationFromAddress(_controllerDestino.text);
       print("Endereços2: " + locations.toString());
 
-      if (locations != null && locations.length > 0) {
+      if (locations.isNotEmpty) {
         //Obtendo o endereço a partir da latitude e longitude.
         List<Placemark> placemarks = await placemarkFromCoordinates(
             locations[0].latitude, locations[0].longitude);
 
-        if (placemarks != null && placemarks.length > 0) {
+        if (placemarks.length > 0) {
           Placemark endereco = placemarks[0];
 
           Destino destino = Destino();
@@ -255,13 +255,71 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
             (_) => {db.collection("requisicao_ativa").doc(user?.uid).delete()});
   }
 
-  _adicionarListenerRequisicaoAtiva() async {
+  // _adicionarListenerRequisicaoAtiva() async {
+  //   User? user = await UsuarioFirebase.getUsuarioAtual();
+  //
+  //   FirebaseFirestore db = FirebaseFirestore.instance;
+  //   await db
+  //       .collection("requisicao_ativa")
+  //       .doc(user?.uid)
+  //       .snapshots()
+  //       .listen((snapshot) {
+  //     //print("dados recuperados: " + snapshot.data.toString() );
+  //
+  //     /*
+  //           Caso tenha uma requisicao ativa
+  //             -> altera interface de acordo com status
+  //           Caso não tenha
+  //             -> Exibe interface padrão para chamar uber
+  //       */
+  //     if (snapshot.data() != null) {
+  //       var dados = snapshot.data() as Map;
+  //       String status = dados["status"];
+  //       _idRequisicao = dados["id_requisicao"];
+  //
+  //       switch (status) {
+  //         case StatusRequisicao.AGUARDANDO:
+  //           _statusAguardando();
+  //           break;
+  //         case StatusRequisicao.A_CAMINHO:
+  //           _statusACaminho();
+  //           break;
+  //         case StatusRequisicao.VIAGEM:
+  //           break;
+  //         case StatusRequisicao.FINALIZADA:
+  //           break;
+  //       }
+  //     } else {
+  //       _statusUberNaoChamado();
+  //     }
+  //   });
+  // }
+
+  _recuperarRequisicaoAtiva() async {
+
     User? user = await UsuarioFirebase.getUsuarioAtual();
 
     FirebaseFirestore db = FirebaseFirestore.instance;
-    await db
+    DocumentSnapshot documentSnapshot = await db
         .collection("requisicao_ativa")
         .doc(user?.uid)
+        .get();
+
+    if( documentSnapshot.data() != null ){
+      var dados = documentSnapshot.data() as Map;
+      _idRequisicao = dados["id_requisicao"];
+      _adicionarListenerRequisicao( _idRequisicao );
+
+    }else{
+      _statusUberNaoChamado();
+    }
+  }
+
+  _adicionarListenerRequisicao(String idRequisicao) async{
+    FirebaseFirestore db = FirebaseFirestore.instance;
+    await db
+        .collection("requisicao_ativa")
+        .doc(idRequisicao)
         .snapshots()
         .listen((snapshot) {
       //print("dados recuperados: " + snapshot.data.toString() );
@@ -298,8 +356,8 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
   @override
   void initState() {
     super.initState();
+    _recuperarRequisicaoAtiva();/*Antigo _adicionarListenerRequisicaoAtiva()*/
     _adicionarListenerLocalizacao();
-    _adicionarListenerRequisicaoAtiva();
   }
 
   @override

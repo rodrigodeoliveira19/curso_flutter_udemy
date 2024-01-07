@@ -37,6 +37,7 @@ class _CorridaState extends State<Corrida> {
   String _textoBotao = "Aceitar corrida";
   Color _corBotao = Colors.blue;
   var _funcaoBotao;
+  String _mensagemStatus = "";
 
   //Requisicao
   late Map<String,dynamic> _dadosRequisicao;
@@ -69,9 +70,6 @@ class _CorridaState extends State<Corrida> {
           : 'Posicao atual: ${position.latitude.toString()}, ${position.longitude.toString()}');
 
       setState(() {
-        _posicaoCamera = CameraPosition(
-            target: LatLng(position.latitude, position.longitude), zoom: 19);
-        _exibirMarcadorPassageiro(position);
         // _movimentarCamera();
         _localMotorista = position;
       });
@@ -85,26 +83,24 @@ class _CorridaState extends State<Corrida> {
         .animateCamera(CameraUpdate.newCameraPosition(_posicaoCamera));
   }
 
-  void _exibirMarcadorPassageiro(Position position) async {
+  void _exibirMarcador(
+      Position position, String icone, String infoWindow) async {
     double pixelRatio = MediaQuery.of(context).devicePixelRatio;
 
     BitmapDescriptor.fromAssetImage(
-            ImageConfiguration(devicePixelRatio: pixelRatio),
-            "imagens/uber/passageiro.png")
-        .then((BitmapDescriptor icon) {
-      Marker marcadorPassageiro = Marker(
-          markerId: MarkerId("${position.latitude} - "
-              "${position.longitude} - "
-              "marcador-passageiro"),
+            ImageConfiguration(devicePixelRatio: pixelRatio), icone)
+        .then((BitmapDescriptor bitmapDescriptor) {
+      Marker marcador = Marker(
+          markerId: MarkerId(icone),
           position: LatLng(position.latitude, position.longitude),
-          infoWindow: InfoWindow(title: "Meu Local"),
-          icon: icon,
+          infoWindow: InfoWindow(title: infoWindow),
+          icon: bitmapDescriptor,
           onTap: () {
             print("Cartório clicado!!");
           });
 
       setState(() {
-        _marcadores.add(marcadorPassageiro);
+        _marcadores.add(marcador);
       });
     });
   }
@@ -116,11 +112,6 @@ class _CorridaState extends State<Corrida> {
     //Get Requisicao
     DocumentSnapshot snapshot =
     await db.collection("requisicoes").doc( idRequisicao ).get();
-
-    _dadosRequisicao = snapshot.data() as Map<String,dynamic>;
-
-    _adicionarListenerRequisicao();
-
   }
 
   _adicionarListenerRequisicao() async {
@@ -132,6 +123,8 @@ class _CorridaState extends State<Corrida> {
         .snapshots()
         .listen((event) {
       if (event.data() != null) {
+        _dadosRequisicao = event.data() as Map<String,dynamic>;
+
         var requisicao = event.data() as Map;
         String status = requisicao["status"];
 
@@ -156,10 +149,22 @@ class _CorridaState extends State<Corrida> {
     _alterarBotaoPrincipal("Aceitar Corrida", Color(0xff1ebbd8), () {
       _aceitarCorrida();
     });
+
+    // double motoristaLat = _dadosRequisicao["motorista"]["latitude"];
+    // double motoristaLog = _dadosRequisicao["motorista"]["longitude"];
+
+    // Revisar esse ponto. Na aula o professor cria um novo Position. Porem já existe um listner para a posicao do motorista.
+    // Position position = Position(longitude: motoristaLog, latitude: motoristaLat, timestamp: null, accuracy: 0, altitude: 0, heading: 0, speed: 0, speedAccuracy: 0);
+    Position position = _localMotorista;
+    _posicaoCamera = CameraPosition(
+        target: LatLng(position.latitude, position.longitude), zoom: 19);
+    _exibirMarcador(position,"imagens/uber/motorista.png","Motorista");
+    _movimentarCamera();
   }
 
   _statusACaminho() {
-    _alterarBotaoPrincipal("Motorista a caminho", Color(0xff1ebbd8), (){});
+    _mensagemStatus = "A caminho do passageiro";
+    _alterarBotaoPrincipal("Iniciar corrida", Color(0xff1ebbd8), (){ _IniciarCorrida(); });
 
     double latitudePassageiro = _dadosRequisicao["passageiro"]["latitude"];
     double longitudePassageiro = _dadosRequisicao["passageiro"]["longitude"];
@@ -190,6 +195,10 @@ class _CorridaState extends State<Corrida> {
         LatLngBounds(southwest: LatLng(sountLat, sountLong),
             northeast: LatLng(northLat, northLong))
     );
+  }
+
+  _IniciarCorrida(){
+
   }
 
   /*Centraliza os marcadores no mapa.
@@ -247,8 +256,11 @@ class _CorridaState extends State<Corrida> {
   _aceitarCorrida() async{
     //Recuperar dados do Motorista
     Usuario usuarioMotorista = await UsuarioFirebase.getUsuarioLogado();
-    usuarioMotorista.latitude = _localMotorista.latitude;
-    usuarioMotorista.longitude = _localMotorista.longitude;
+    // usuarioMotorista.latitude = _localMotorista.latitude;
+    // usuarioMotorista.longitude = _localMotorista.longitude;
+
+    usuarioMotorista.latitude = _dadosRequisicao["motorista"]["latitude"];
+    usuarioMotorista.longitude = _dadosRequisicao["motorista"]["longitude"];
 
     FirebaseFirestore db = FirebaseFirestore.instance;
     String idRequisicao = _dadosRequisicao["id"];
@@ -277,16 +289,16 @@ class _CorridaState extends State<Corrida> {
   @override
   void initState() {
     super.initState();
+    _adicionarListenerRequisicao();
     _adicionarListenerLocalizacao();
-
-    _recuperarRequisicao();
+    // _recuperarRequisicao();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Painel corrida"),
+        title: Text("Painel corrida - "+ _mensagemStatus),
       ),
       body: Container(
           //Stack - Empilha os itens na ordem de inserção.
