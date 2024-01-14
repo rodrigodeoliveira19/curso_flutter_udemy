@@ -69,7 +69,7 @@ class _CorridaState extends State<Corrida> {
           ? 'Local: Unknown'
           : 'Posicao atual: ${position.latitude.toString()}, ${position.longitude.toString()}');
 
-      setState(() {
+          setState(() {
         // _movimentarCamera();
         _localMotorista = position;
       });

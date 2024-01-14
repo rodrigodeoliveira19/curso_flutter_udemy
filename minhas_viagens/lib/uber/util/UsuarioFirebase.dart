@@ -37,4 +37,18 @@ class UsuarioFirebase{
 
     throw "Não foi possível obter o usuário";
   }
+
+  static atualizarDadosLocalizacao(
+      String idRequisicao, double lat, double lon) async {
+    Usuario usuario = await getUsuarioLogado();
+    usuario.latitude = lat;
+    usuario.longitude = lon; 
+
+    FirebaseFirestore db = FirebaseFirestore.instance;
+    db.collection("requisicoes")
+    .doc(idRequisicao)
+    .update({
+      "motorista": usuario.toMap()
+    });
+  }
 }

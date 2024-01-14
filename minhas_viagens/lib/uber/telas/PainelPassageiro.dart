@@ -39,8 +39,9 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
   String _textoBotao = "Chamar Uber";
   Color _corBotao = Colors.blue;
   var _funcaoBotao;
-  late String _idRequisicao;
+  late String _idRequisicao = "";
   late Position _localPassageiro;
+  late Map<dynamic, dynamic> _dadosRequisicao = {'status':'NAO_RECUPERADO'};
 
   _deslogarUsuario() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -80,14 +81,29 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
       print(position == null
           ? 'Local: Unknown'
           : 'Posicao atual: ${position.latitude.toString()}, ${position.longitude.toString()}');
+      // _localPassageiro = position;
 
-      setState(() {
-        _posicaoCamera = CameraPosition(
-            target: LatLng(position.latitude, position.longitude), zoom: 19);
-        _localPassageiro = position;
-        _exibirMarcadorPassageiro(position);
-        _movimentarCamera();
-      });
+      if (_idRequisicao.isNotEmpty) {
+        //Atualizar o lacal do passageiro
+        UsuarioFirebase.atualizarDadosLocalizacao(
+            _idRequisicao, position.latitude, position.longitude);
+      } else{
+        setState(() {
+          _posicaoCamera = CameraPosition(
+              target: LatLng(position.latitude, position.longitude), zoom: 19);
+          _localPassageiro = position;
+          _exibirMarcadorPassageiro(position);
+          _movimentarCamera();
+        });
+      }
+
+      // setState(() {
+      //   _posicaoCamera = CameraPosition(
+      //       target: LatLng(position.latitude, position.longitude), zoom: 19);
+      //   _localPassageiro = position;
+      //   _exibirMarcadorPassageiro(position);
+      //   _movimentarCamera();
+      // });
     });
   }
 
@@ -214,6 +230,9 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
         .collection("requisicao_ativa")
         .doc(usuario.idUsuario)
         .set(dadosRequisicaoAtiva);
+
+    //chamara o metodo para alterar a interface para o status aguardando
+    _statusAguardando();
   }
 
   _statusUberNaoChamado() {
@@ -221,6 +240,20 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
     _alterarBotaoPrincipal("Chamar uber", Color(0xff1ebbd8), () {
       _chamarUber();
     });
+
+    // Position position = Position(
+    //     latitude: _localPassageiro.latitude,
+    //     longitude: _localPassageiro.longitude
+    // );
+
+    // if(_localPassageiro != null){
+    //   _exibirMarcadorPassageiro(_localPassageiro);
+    //   _posicaoCamera = CameraPosition(
+    //       target: LatLng(_localPassageiro.latitude, _localPassageiro.longitude), zoom: 19);
+    //   _movimentarCamera();
+    //
+    // }
+
   }
 
   _alterarBotaoPrincipal(String texto, Color cor, Function funcao) {
@@ -232,10 +265,13 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
   }
 
   _statusAguardando() {
+    print("Metodo _statusAguardando");
     _exibirCaixaEnderecoDestino = false;
     _alterarBotaoPrincipal("Cancelar", Colors.red, () {
       _cancelarUber();
     });
+
+    //Movimentou a camera como no  metodo _statusUberNaoChamado
   }
 
   _statusACaminho() {
@@ -316,10 +352,13 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
   }
 
   _adicionarListenerRequisicao(String idRequisicao) async{
+      User? user = await UsuarioFirebase.getUsuarioAtual();
+      print("id usuario: ${user!.uid}");
+
     FirebaseFirestore db = FirebaseFirestore.instance;
     await db
-        .collection("requisicao_ativa")
-        .doc(idRequisicao)
+        .collection("requisicoes")
+        .doc(idRequisicao) //Entender se o listner é no documento da requisição ativa(id usuario) ou no documento da requisição.
         .snapshots()
         .listen((snapshot) {
       //print("dados recuperados: " + snapshot.data.toString() );
@@ -332,11 +371,13 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
         */
       if (snapshot.data() != null) {
         var dados = snapshot.data() as Map;
+        _dadosRequisicao = dados;
         String status = dados["status"];
         _idRequisicao = dados["id_requisicao"];
 
         switch (status) {
           case StatusRequisicao.AGUARDANDO:
+            print("passssssssssssssei por aqui");
             _statusAguardando();
             break;
           case StatusRequisicao.A_CAMINHO:
@@ -353,11 +394,35 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
     });
   }
 
+  void _stausInterface(){
+    if(_idRequisicao.isNotEmpty){
+      String status = _dadosRequisicao["status"];
+      if(status != "NAO_RECUPERADO"){
+        switch (status) {
+          case StatusRequisicao.AGUARDANDO:
+            print("passssssssssssssei por aqui");
+            _statusAguardando();
+            break;
+          case StatusRequisicao.A_CAMINHO:
+            _statusACaminho();
+            break;
+          case StatusRequisicao.VIAGEM:
+            break;
+          case StatusRequisicao.FINALIZADA:
+            break;
+        }
+      }
+
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    _recuperarRequisicaoAtiva();/*Antigo _adicionarListenerRequisicaoAtiva()*/
+    _recuperarRequisicaoAtiva();
     _adicionarListenerLocalizacao();
+
+    /*Antigo _adicionarListenerRequisicaoAtiva()*/
   }
 
   @override
