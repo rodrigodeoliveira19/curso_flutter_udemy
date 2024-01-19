@@ -38,6 +38,8 @@ class _CorridaState extends State<Corrida> {
   Color _corBotao = Colors.blue;
   var _funcaoBotao;
   String _mensagemStatus = "";
+  late String _idRequisicao;
+  String _statusRequisicao = StatusRequisicao.AGUARDANDO;
 
   //Requisicao
   late Map<String,dynamic> _dadosRequisicao;
@@ -69,6 +71,12 @@ class _CorridaState extends State<Corrida> {
           ? 'Local: Unknown'
           : 'Posicao atual: ${position.latitude.toString()}, ${position.longitude.toString()}');
 
+
+      if(widget.idRequisicao.isNotEmpty){
+        if (_statusRequisicao != StatusRequisicao.AGUARDANDO)
+          UsuarioFirebase.atualizarDadosLocalizacao(widget.idRequisicao,
+              position.latitude, position.longitude, "motorista");
+      }
           setState(() {
         // _movimentarCamera();
         _localMotorista = position;
@@ -116,19 +124,20 @@ class _CorridaState extends State<Corrida> {
 
   _adicionarListenerRequisicao() async {
     FirebaseFirestore db = FirebaseFirestore.instance;
-    String idRequisicao = _dadosRequisicao["id"];
+    // String idRequisicao = _dadosRequisicao["id_requisicao"];
+    print("id requisicao ${widget.idRequisicao}");
     await db
         .collection("requisicoes")
-        .doc(idRequisicao)
+        .doc(widget.idRequisicao)
         .snapshots()
         .listen((event) {
       if (event.data() != null) {
         _dadosRequisicao = event.data() as Map<String,dynamic>;
 
         var requisicao = event.data() as Map;
-        String status = requisicao["status"];
+        _statusRequisicao = requisicao["status"];
 
-        switch (status) {
+        switch (_statusRequisicao) {
           case StatusRequisicao.AGUARDANDO:
             _statusAguardando();
             break;
@@ -150,12 +159,15 @@ class _CorridaState extends State<Corrida> {
       _aceitarCorrida();
     });
 
-    // double motoristaLat = _dadosRequisicao["motorista"]["latitude"];
-    // double motoristaLog = _dadosRequisicao["motorista"]["longitude"];
+    // double motoristaLat = _localMotorista.latitude;
+    // double motoristaLog = _localMotorista.longitude;
+
+    double motoristaLat = _dadosRequisicao["motorista"]["latitude"];
+    double motoristaLog = _dadosRequisicao["motorista"]["longitude"];
 
     // Revisar esse ponto. Na aula o professor cria um novo Position. Porem já existe um listner para a posicao do motorista.
-    // Position position = Position(longitude: motoristaLog, latitude: motoristaLat, timestamp: null, accuracy: 0, altitude: 0, heading: 0, speed: 0, speedAccuracy: 0);
-    Position position = _localMotorista;
+    Position position = Position(longitude: motoristaLog, latitude: motoristaLat, timestamp: null, accuracy: 0, altitude: 0, heading: 0, speed: 0, speedAccuracy: 0);
+    // Position position = _localMotorista;
     _posicaoCamera = CameraPosition(
         target: LatLng(position.latitude, position.longitude), zoom: 19);
     _exibirMarcador(position,"imagens/uber/motorista.png","Motorista");
@@ -263,7 +275,7 @@ class _CorridaState extends State<Corrida> {
     usuarioMotorista.longitude = _dadosRequisicao["motorista"]["longitude"];
 
     FirebaseFirestore db = FirebaseFirestore.instance;
-    String idRequisicao = _dadosRequisicao["id"];
+    String idRequisicao = _dadosRequisicao["id_requisicao"];
 
     db.collection("requisicoes").doc(idRequisicao).update({
       "motorista": usuarioMotorista.toMap(),
@@ -289,8 +301,12 @@ class _CorridaState extends State<Corrida> {
   @override
   void initState() {
     super.initState();
+    //String _idRequisicao = widget.idRequisicao;
+
     _adicionarListenerRequisicao();
     _adicionarListenerLocalizacao();
+
+
     // _recuperarRequisicao();
   }
 

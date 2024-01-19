@@ -39,7 +39,7 @@ class UsuarioFirebase{
   }
 
   static atualizarDadosLocalizacao(
-      String idRequisicao, double lat, double lon) async {
+      String idRequisicao, double lat, double lon, String tipoUser) async {
     Usuario usuario = await getUsuarioLogado();
     usuario.latitude = lat;
     usuario.longitude = lon; 
@@ -48,7 +48,7 @@ class UsuarioFirebase{
     db.collection("requisicoes")
     .doc(idRequisicao)
     .update({
-      "motorista": usuario.toMap()
+      tipoUser: usuario.toMap()
     });
   }
 }

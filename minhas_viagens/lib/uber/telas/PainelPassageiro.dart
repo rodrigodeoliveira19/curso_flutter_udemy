@@ -86,7 +86,7 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
       if (_idRequisicao.isNotEmpty) {
         //Atualizar o lacal do passageiro
         UsuarioFirebase.atualizarDadosLocalizacao(
-            _idRequisicao, position.latitude, position.longitude);
+            _idRequisicao, position.latitude, position.longitude, "passageiro");
       } else{
         setState(() {
           _posicaoCamera = CameraPosition(

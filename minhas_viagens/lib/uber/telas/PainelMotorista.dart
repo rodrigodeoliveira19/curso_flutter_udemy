@@ -159,7 +159,7 @@ class _PainelMotoristaState extends State<PainelMotorista> {
                           List<DocumentSnapshot> requisicoes = querySnapshot.docs.toList();
                           DocumentSnapshot item = requisicoes[ indice ];
 
-                          String idRequisicao = item["id"];
+                          String idRequisicao = item["id_requisicao"];
                           String nomePassageiro = item["passageiro"]["nome"];
                           String rua = item["destino"]["rua"];
                           String numero = item["destino"]["numero"];
