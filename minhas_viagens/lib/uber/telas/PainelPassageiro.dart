@@ -43,6 +43,8 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
   late Position _localPassageiro;
   late Map<dynamic, dynamic> _dadosRequisicao = {'status':'NAO_RECUPERADO'};
 
+  late StreamSubscription<DocumentSnapshot> _streamSubscriptionRequisicoes;
+
   _deslogarUsuario() async {
     WidgetsFlutterBinding.ensureInitialized();
     await Firebase.initializeApp();
@@ -87,23 +89,24 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
         //Atualizar o lacal do passageiro
         UsuarioFirebase.atualizarDadosLocalizacao(
             _idRequisicao, position.latitude, position.longitude, "passageiro");
-      } else{
-        setState(() {
-          _posicaoCamera = CameraPosition(
-              target: LatLng(position.latitude, position.longitude), zoom: 19);
-          _localPassageiro = position;
-          _exibirMarcadorPassageiro(position);
-          _movimentarCamera();
-        });
-      }
+       } //else{
+      //   setState(() {
+      //     _posicaoCamera = CameraPosition(
+      //         target: LatLng(position.latitude, position.longitude), zoom: 19);
+      //     _localPassageiro = position;
+      //     _exibirMarcadorPassageiro(position);
+      //     _movimentarCamera();
+      //   });
+      //   //_statusUberNaoChamado();
+      // }
 
-      // setState(() {
-      //   _posicaoCamera = CameraPosition(
-      //       target: LatLng(position.latitude, position.longitude), zoom: 19);
-      //   _localPassageiro = position;
-      //   _exibirMarcadorPassageiro(position);
-      //   _movimentarCamera();
-      // });
+      setState(() {
+        _posicaoCamera = CameraPosition(
+            target: LatLng(position.latitude, position.longitude), zoom: 19);
+        _localPassageiro = position;
+        _exibirMarcadorPassageiro(position);
+        _movimentarCamera();
+      });
     });
   }
 
@@ -232,7 +235,8 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
         .set(dadosRequisicaoAtiva);
 
     //chamara o metodo para alterar a interface para o status aguardando
-    _statusAguardando();
+    //_statusAguardando();
+    _adicionarListenerRequisicao(requisicao.id);
   }
 
   _statusUberNaoChamado() {
@@ -279,6 +283,84 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
     _alterarBotaoPrincipal("Motorista a caminho", Colors.grey, () {
       // _cancelarUber();
     });
+
+    double latitudePassageiro = _dadosRequisicao["passageiro"]["latitude"];
+    double longitudePassageiro = _dadosRequisicao["passageiro"]["longitude"];
+
+    double latitudeMotorista = _dadosRequisicao["motorista"]["latitude"];
+    double longitudeMotorista = _dadosRequisicao["motorista"]["longitude"];
+
+    _exibirDoisMarcadores(LatLng(latitudePassageiro, longitudePassageiro),
+        LatLng(latitudeMotorista, longitudeMotorista));
+
+    var northLat, northLong, sountLat, sountLong;
+    if(latitudeMotorista <= latitudePassageiro){
+      sountLat = latitudeMotorista;
+      northLat = latitudePassageiro;
+    }else{
+      sountLat = latitudePassageiro;
+      northLat = latitudeMotorista;
+    }
+
+    if(longitudeMotorista <= longitudePassageiro){
+      sountLong = longitudeMotorista;
+      northLong = longitudePassageiro;
+    }else{
+      sountLong = longitudePassageiro;
+      northLong = longitudeMotorista;
+    }
+    _movimentarCameraBounds(
+        LatLngBounds(southwest: LatLng(sountLat, sountLong),
+            northeast: LatLng(northLat, northLong))
+    );
+
+  }
+
+  _exibirDoisMarcadores(LatLng latLngPassageiro, LatLng latLngMotorista){
+    double pixelRatio = MediaQuery.of(context).devicePixelRatio;
+
+    Set<Marker> _listaMarcadores = {};
+    BitmapDescriptor.fromAssetImage(
+        ImageConfiguration(devicePixelRatio: pixelRatio),
+        "imagens/uber/motorista.png")
+        .then((BitmapDescriptor icon) {
+      Marker marcadorMotorista = Marker(
+          markerId: MarkerId("${latLngMotorista.latitude} - "
+              "${latLngMotorista.longitude} - "
+              "marcador-motorista"),
+          position: latLngMotorista,
+          infoWindow: InfoWindow(title: "Local Motorista"),
+          icon: icon);
+
+      _listaMarcadores.add(marcadorMotorista);
+    });
+
+    BitmapDescriptor.fromAssetImage(
+        ImageConfiguration(devicePixelRatio: pixelRatio),
+        "imagens/uber/passageiro.png")
+        .then((BitmapDescriptor icon) {
+      Marker marcadorPassageiro = Marker(
+          markerId: MarkerId("${latLngPassageiro.latitude} - "
+              "${latLngPassageiro.longitude} - "
+              "marcador-passageiro"),
+          position: latLngPassageiro,
+          infoWindow: InfoWindow(title: "Local passageiro"),
+          icon: icon);
+
+      _listaMarcadores.add(marcadorPassageiro);
+    });
+
+    setState(() {
+      _marcadores = _listaMarcadores;
+      // _posicaoCamera = CameraPosition(target: latLngMotorista, zoom: 25);
+      // _movimentarCamera();
+    });
+  }
+
+  _movimentarCameraBounds(LatLngBounds latLngBounds) async {
+    GoogleMapController googleMapController = await _mapController.future;
+    googleMapController
+        .animateCamera(CameraUpdate.newLatLngBounds(latLngBounds, 100));
   }
 
   _cancelarUber() async {
@@ -351,14 +433,15 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
     }
   }
 
-  _adicionarListenerRequisicao(String idRequisicao) async{
-      User? user = await UsuarioFirebase.getUsuarioAtual();
-      print("id usuario: ${user!.uid}");
+  _adicionarListenerRequisicao(String idRequisicao) async {
+    User? user = await UsuarioFirebase.getUsuarioAtual();
+    print("id usuario: ${user!.uid}");
 
     FirebaseFirestore db = FirebaseFirestore.instance;
-    await db
+    _streamSubscriptionRequisicoes = await db
         .collection("requisicoes")
-        .doc(idRequisicao) //Entender se o listner é no documento da requisição ativa(id usuario) ou no documento da requisição.
+        .doc(
+            idRequisicao) //Entender se o listner é no documento da requisição ativa(id usuario) ou no documento da requisição.
         .snapshots()
         .listen((snapshot) {
       //print("dados recuperados: " + snapshot.data.toString() );
@@ -423,6 +506,12 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
     _adicionarListenerLocalizacao();
 
     /*Antigo _adicionarListenerRequisicaoAtiva()*/
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _streamSubscriptionRequisicoes.cancel();
   }
 
   @override

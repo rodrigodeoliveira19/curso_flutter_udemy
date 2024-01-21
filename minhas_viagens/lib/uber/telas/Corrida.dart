@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ffi';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -23,6 +24,11 @@ class Corrida extends StatefulWidget {
 }
 
 class _CorridaState extends State<Corrida> {
+  bool _pegueiAlocalizacao = false;
+  List<String> itensMenu = [
+    "Configurações", "Deslogar"
+  ];
+
   Completer<GoogleMapController> _mapController = Completer();
   CameraPosition _posicaoCamera = CameraPosition(
     target: LatLng(-23.563370, -46.652923),
@@ -71,16 +77,19 @@ class _CorridaState extends State<Corrida> {
           ? 'Local: Unknown'
           : 'Posicao atual: ${position.latitude.toString()}, ${position.longitude.toString()}');
 
-
-      if(widget.idRequisicao.isNotEmpty){
+      _pegueiAlocalizacao = true;
+      if (widget.idRequisicao.isNotEmpty) {
         if (_statusRequisicao != StatusRequisicao.AGUARDANDO)
           UsuarioFirebase.atualizarDadosLocalizacao(widget.idRequisicao,
               position.latitude, position.longitude, "motorista");
-      }
+        else{//Aguardando
           setState(() {
-        // _movimentarCamera();
-        _localMotorista = position;
-      });
+            // _movimentarCamera();
+            _localMotorista = position;
+          });
+          _statusAguardando();
+        }
+      }
 
     });
   }
@@ -159,23 +168,26 @@ class _CorridaState extends State<Corrida> {
       _aceitarCorrida();
     });
 
-    // double motoristaLat = _localMotorista.latitude;
-    // double motoristaLog = _localMotorista.longitude;
+    if(_pegueiAlocalizacao){
+      double motoristaLat = _localMotorista.latitude;
+      double motoristaLog = _localMotorista.longitude;
 
-    double motoristaLat = _dadosRequisicao["motorista"]["latitude"];
-    double motoristaLog = _dadosRequisicao["motorista"]["longitude"];
+      // double motoristaLat = _dadosRequisicao["motorista"]["latitude"];
+      // double motoristaLog = _dadosRequisicao["motorista"]["longitude"];
 
-    // Revisar esse ponto. Na aula o professor cria um novo Position. Porem já existe um listner para a posicao do motorista.
-    Position position = Position(longitude: motoristaLog, latitude: motoristaLat, timestamp: null, accuracy: 0, altitude: 0, heading: 0, speed: 0, speedAccuracy: 0);
-    // Position position = _localMotorista;
-    _posicaoCamera = CameraPosition(
-        target: LatLng(position.latitude, position.longitude), zoom: 19);
-    _exibirMarcador(position,"imagens/uber/motorista.png","Motorista");
-    _movimentarCamera();
+      // Revisar esse ponto. Na aula o professor cria um novo Position. Porem já existe um listner para a posicao do motorista.
+      Position position = Position(longitude: motoristaLog, latitude: motoristaLat, timestamp: null, accuracy: 0, altitude: 0, heading: 0, speed: 0, speedAccuracy: 0);
+      // Position position = _localMotorista;
+      _posicaoCamera = CameraPosition(
+          target: LatLng(position.latitude, position.longitude), zoom: 19);
+      _exibirMarcador(position,"imagens/uber/motorista.png","Motorista");
+      _movimentarCamera();
+    }
+
   }
 
   _statusACaminho() {
-    _mensagemStatus = "A caminho do passageiro";
+    _mensagemStatus = "A caminho";
     _alterarBotaoPrincipal("Iniciar corrida", Color(0xff1ebbd8), (){ _IniciarCorrida(); });
 
     double latitudePassageiro = _dadosRequisicao["passageiro"]["latitude"];
@@ -209,8 +221,29 @@ class _CorridaState extends State<Corrida> {
     );
   }
 
-  _IniciarCorrida(){
+  _IniciarCorrida() {
+    FirebaseFirestore db = FirebaseFirestore.instance;
+    db.collection("requisicoes").doc(_idRequisicao).update({
+      "origem": {
+        "latitude": _dadosRequisicao["motorista"]["latitude"],
+        "longitude": _dadosRequisicao["motorista"]["longitude"]
+      },
+      "status": StatusRequisicao.VIAGEM
+    }).then((_) {
 
+      //atualiza requisicao ativa
+      String idPassageiro = _dadosRequisicao["passageiro"]["idUsuario"];
+      db.collection("requisicao_ativa").doc(idPassageiro).update({
+        "status": StatusRequisicao.A_CAMINHO,
+      });
+
+      //Salvar requisicao ativa para motorista
+      String idMotorista = _dadosRequisicao["motorista"]["idUsuario"];
+      db.collection("requisicao_ativa_motorista").doc(idMotorista).update({
+        "status": StatusRequisicao.A_CAMINHO,
+      });
+
+    });
   }
 
   /*Centraliza os marcadores no mapa.
@@ -268,11 +301,11 @@ class _CorridaState extends State<Corrida> {
   _aceitarCorrida() async{
     //Recuperar dados do Motorista
     Usuario usuarioMotorista = await UsuarioFirebase.getUsuarioLogado();
-    // usuarioMotorista.latitude = _localMotorista.latitude;
-    // usuarioMotorista.longitude = _localMotorista.longitude;
+    usuarioMotorista.latitude = _localMotorista.latitude;
+    usuarioMotorista.longitude = _localMotorista.longitude;
 
-    usuarioMotorista.latitude = _dadosRequisicao["motorista"]["latitude"];
-    usuarioMotorista.longitude = _dadosRequisicao["motorista"]["longitude"];
+    // usuarioMotorista.latitude = _dadosRequisicao["motorista"]["latitude"];
+    // usuarioMotorista.longitude = _dadosRequisicao["motorista"]["longitude"];
 
     FirebaseFirestore db = FirebaseFirestore.instance;
     String idRequisicao = _dadosRequisicao["id_requisicao"];
@@ -307,15 +340,56 @@ class _CorridaState extends State<Corrida> {
     _adicionarListenerLocalizacao();
 
 
+
+
     // _recuperarRequisicao();
+  }
+
+  _deslogarUsuario() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp();
+
+    FirebaseAuth auth = FirebaseAuth.instance;
+    await auth.signOut();
+    Navigator.pushReplacementNamed(context, "/");
+  }
+
+  _escolhaMenuItem( String escolha ){
+    switch( escolha ){
+      case "Deslogar" :
+        _deslogarUsuario();
+        break;
+      case "Configurações" :
+        break;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Painel corrida - "+ _mensagemStatus),
-      ),
+       appBar: //AppBar(
+      //   title: Text("Painel corrida - "+ _mensagemStatus),
+      // )
+      AppBar(
+              title: Text("Painel corrida - "+ _mensagemStatus),
+              actions: <Widget>[
+                PopupMenuButton<String>(
+                  onSelected: _escolhaMenuItem,
+                  itemBuilder: (context){
+
+                    return itensMenu.map((String item){
+
+                      return PopupMenuItem<String>(
+                        value: item,
+                        child: Text(item),
+                      );
+
+                    }).toList();
+
+                  },
+                )
+              ],
+            ),
       body: Container(
           //Stack - Empilha os itens na ordem de inserção.
           child: Stack(
