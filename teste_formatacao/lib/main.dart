@@ -12,16 +12,16 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
-    var mask = NumberFormat('###.0#', 'pt_BR');
-    var resultado = mask.format(12.345);
+    var mask = NumberFormat('#,##0.00', 'pt_BR');
+    var resultado = mask.format(12556.1);
 
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Flutter Demo ${resultado}',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Page'),
     );
   }
 }
