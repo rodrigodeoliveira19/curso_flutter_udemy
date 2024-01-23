@@ -78,15 +78,19 @@ class _CorridaState extends State<Corrida> {
           : 'Posicao atual: ${position.latitude.toString()}, ${position.longitude.toString()}');
 
       _pegueiAlocalizacao = true;
+      setState(() {
+        // _movimentarCamera();
+        _localMotorista = position;
+      });
       if (widget.idRequisicao.isNotEmpty) {
         if (_statusRequisicao != StatusRequisicao.AGUARDANDO)
           UsuarioFirebase.atualizarDadosLocalizacao(widget.idRequisicao,
               position.latitude, position.longitude, "motorista");
         else{//Aguardando
-          setState(() {
-            // _movimentarCamera();
-            _localMotorista = position;
-          });
+          // setState(() {
+          //   // _movimentarCamera();
+          //   _localMotorista = position;
+          // });
           _statusAguardando();
         }
       }
@@ -154,6 +158,7 @@ class _CorridaState extends State<Corrida> {
             _statusACaminho();
             break;
           case StatusRequisicao.VIAGEM:
+            _statusEmViagem();
             break;
           case StatusRequisicao.FINALIZADA:
             break;
@@ -187,7 +192,7 @@ class _CorridaState extends State<Corrida> {
   }
 
   _statusACaminho() {
-    _mensagemStatus = "A caminho";
+    _mensagemStatus = "A caminho do passageiro";
     _alterarBotaoPrincipal("Iniciar corrida", Color(0xff1ebbd8), (){ _IniciarCorrida(); });
 
     double latitudePassageiro = _dadosRequisicao["passageiro"]["latitude"];
@@ -221,9 +226,50 @@ class _CorridaState extends State<Corrida> {
     );
   }
 
+
+  _statusEmViagem() {
+    _mensagemStatus = "Em viagem";
+    _alterarBotaoPrincipal("Finalizar corrida", Color(0xff1ebbd8), (){ _finalizarCorrida(); });
+
+    double latitudeDestino = _dadosRequisicao["destino"]["latitude"];
+    double longitudeDestino = _dadosRequisicao["destino"]["longitude"];
+
+    double latitudeOrigem = _dadosRequisicao["origem"]["latitude"];
+    double longitudeOrigem = _dadosRequisicao["origem"]["longitude"];
+
+    _exibirDoisMarcadores(LatLng(latitudeOrigem, longitudeDestino),
+        LatLng(latitudeOrigem, longitudeOrigem));
+
+    //'southwest.latitude <= northeast.latitude': is not true
+    var nLat, nLon, sLat, sLon;
+
+    if( latitudeOrigem <=  latitudeDestino ){
+      sLat = latitudeOrigem;
+      nLat = latitudeDestino;
+    }else{
+      sLat = latitudeDestino;
+      nLat = latitudeOrigem;
+    }
+
+    if( longitudeOrigem <=  longitudeDestino ){
+      sLon = longitudeOrigem;
+      nLon = longitudeDestino;
+    }else{
+      sLon = longitudeDestino;
+      nLon = longitudeOrigem;
+    }
+    //-23.560925, -46.650623
+    _movimentarCameraBounds(
+        LatLngBounds(
+            northeast: LatLng(nLat, nLon), //nordeste
+            southwest: LatLng(sLat, sLon) //sudoeste
+        )
+    );
+  }
+
   _IniciarCorrida() {
     FirebaseFirestore db = FirebaseFirestore.instance;
-    db.collection("requisicoes").doc(_idRequisicao).update({
+    db.collection("requisicoes").doc(widget.idRequisicao).update({
       "origem": {
         "latitude": _dadosRequisicao["motorista"]["latitude"],
         "longitude": _dadosRequisicao["motorista"]["longitude"]
@@ -234,16 +280,20 @@ class _CorridaState extends State<Corrida> {
       //atualiza requisicao ativa
       String idPassageiro = _dadosRequisicao["passageiro"]["idUsuario"];
       db.collection("requisicao_ativa").doc(idPassageiro).update({
-        "status": StatusRequisicao.A_CAMINHO,
+        "status": StatusRequisicao.VIAGEM,
       });
 
       //Salvar requisicao ativa para motorista
       String idMotorista = _dadosRequisicao["motorista"]["idUsuario"];
       db.collection("requisicao_ativa_motorista").doc(idMotorista).update({
-        "status": StatusRequisicao.A_CAMINHO,
+        "status": StatusRequisicao.VIAGEM,
       });
 
     });
+  }
+
+  _finalizarCorrida(){
+
   }
 
   /*Centraliza os marcadores no mapa.

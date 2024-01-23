@@ -75,6 +75,7 @@ flutter:
     - imagens/uber/logo.png
     - imagens/uber/motorista.png
     - imagens/uber/passageiro.png
+    - imagens/uber/destino.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

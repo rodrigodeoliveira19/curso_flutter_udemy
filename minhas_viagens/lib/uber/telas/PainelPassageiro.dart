@@ -12,6 +12,7 @@ import 'dart:async';
 import 'dart:io';
 
 import '../model/Destino.dart';
+import '../model/Marcador.dart';
 import '../util/StatusRequisicao.dart';
 
 class PainelPassageiro extends StatefulWidget {
@@ -290,8 +291,22 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
     double latitudeMotorista = _dadosRequisicao["motorista"]["latitude"];
     double longitudeMotorista = _dadosRequisicao["motorista"]["longitude"];
 
-    _exibirDoisMarcadores(LatLng(latitudePassageiro, longitudePassageiro),
-        LatLng(latitudeMotorista, longitudeMotorista));
+    // _exibirDoisMarcadores(LatLng(latitudePassageiro, longitudePassageiro),
+    //     LatLng(latitudeMotorista, longitudeMotorista));
+
+    Marcador marcadorOrigem = Marcador(
+        LatLng(latitudePassageiro, longitudePassageiro),
+        "imagens/uber/passageiro.png",
+        "Local passageiro"
+    );
+
+    Marcador marcadorDestino = Marcador(
+        LatLng(latitudeMotorista, longitudeMotorista),
+        "imagens/uber/motorista.png",
+        "Local motorista"
+    );
+
+    _exibirCentralizarDoisMarcadores(marcadorOrigem, marcadorDestino);
 
     var northLat, northLong, sountLat, sountLong;
     if(latitudeMotorista <= latitudePassageiro){
@@ -316,45 +331,155 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
 
   }
 
-  _exibirDoisMarcadores(LatLng latLngPassageiro, LatLng latLngMotorista){
+  _statusEmViagem() {
+    _exibirCaixaEnderecoDestino = false;
+    _alterarBotaoPrincipal(
+        "Em viagem",
+        Colors.grey,
+        (){}
+    );
+
+    double latitudeDestino = _dadosRequisicao["destino"]["latitude"];
+    double longitudeDestino = _dadosRequisicao["destino"]["longitude"];
+
+    double latitudeOrigem = _dadosRequisicao["motorista"]["latitude"];
+    double longitudeOrigem = _dadosRequisicao["motorista"]["longitude"];
+
+    Marcador marcadorOrigem = Marcador(
+        LatLng(latitudeOrigem, longitudeOrigem),
+        "imagens/uber/motorista.png",
+        "Local motorista"
+    );
+
+    Marcador marcadorDestino = Marcador(
+        LatLng(latitudeDestino, longitudeDestino),
+        "imagens/uber/destino.png",
+        "Local destino"
+    );
+
+    _exibirCentralizarDoisMarcadores(marcadorOrigem, marcadorDestino);
+
+  }
+
+  _exibirCentralizarDoisMarcadores( Marcador marcadorOrigem, Marcador marcadorDestino ){
+
+    double latitudeOrigem = marcadorOrigem.local.latitude;
+    double longitudeOrigem = marcadorOrigem.local.longitude;
+
+    double latitudeDestino = marcadorDestino.local.latitude;
+    double longitudeDestino = marcadorDestino.local.longitude;
+
+    //Exibir dois marcadores
+    _exibirDoisMarcadores(
+        marcadorOrigem,
+        marcadorDestino
+    );
+
+    //'southwest.latitude <= northeast.latitude': is not true
+    var nLat, nLon, sLat, sLon;
+
+    if( latitudeOrigem <=  latitudeDestino ){
+      sLat = latitudeOrigem;
+      nLat = latitudeDestino;
+    }else{
+      sLat = latitudeDestino;
+      nLat = latitudeOrigem;
+    }
+
+    if( longitudeOrigem <=  longitudeDestino ){
+      sLon = longitudeOrigem;
+      nLon = longitudeDestino;
+    }else{
+      sLon = longitudeDestino;
+      nLon = longitudeOrigem;
+    }
+    //-23.560925, -46.650623
+    _movimentarCameraBounds(
+        LatLngBounds(
+            northeast: LatLng(nLat, nLon), //nordeste
+            southwest: LatLng(sLat, sLon) //sudoeste
+        )
+    );
+
+  }
+
+  // _exibirDoisMarcadores(LatLng latLngPassageiro, LatLng latLngMotorista){
+  //   double pixelRatio = MediaQuery.of(context).devicePixelRatio;
+  //
+  //   Set<Marker> _listaMarcadores = {};
+  //   BitmapDescriptor.fromAssetImage(
+  //       ImageConfiguration(devicePixelRatio: pixelRatio),
+  //       "imagens/uber/motorista.png")
+  //       .then((BitmapDescriptor icon) {
+  //     Marker marcadorMotorista = Marker(
+  //         markerId: MarkerId("${latLngMotorista.latitude} - "
+  //             "${latLngMotorista.longitude} - "
+  //             "marcador-motorista"),
+  //         position: latLngMotorista,
+  //         infoWindow: InfoWindow(title: "Local Motorista"),
+  //         icon: icon);
+  //
+  //     _listaMarcadores.add(marcadorMotorista);
+  //   });
+  //
+  //   BitmapDescriptor.fromAssetImage(
+  //       ImageConfiguration(devicePixelRatio: pixelRatio),
+  //       "imagens/uber/passageiro.png")
+  //       .then((BitmapDescriptor icon) {
+  //     Marker marcadorPassageiro = Marker(
+  //         markerId: MarkerId("${latLngPassageiro.latitude} - "
+  //             "${latLngPassageiro.longitude} - "
+  //             "marcador-passageiro"),
+  //         position: latLngPassageiro,
+  //         infoWindow: InfoWindow(title: "Local passageiro"),
+  //         icon: icon);
+  //
+  //     _listaMarcadores.add(marcadorPassageiro);
+  //   });
+  //
+  //   setState(() {
+  //     _marcadores = _listaMarcadores;
+  //     // _posicaoCamera = CameraPosition(target: latLngMotorista, zoom: 25);
+  //     // _movimentarCamera();
+  //   });
+  // }
+
+  _exibirDoisMarcadores( Marcador marcadorOrigem, Marcador marcadorDestino ){
+
     double pixelRatio = MediaQuery.of(context).devicePixelRatio;
+
+    LatLng latLngOrigem = marcadorOrigem.local;
+    LatLng latLngDestino = marcadorDestino.local;
 
     Set<Marker> _listaMarcadores = {};
     BitmapDescriptor.fromAssetImage(
         ImageConfiguration(devicePixelRatio: pixelRatio),
-        "imagens/uber/motorista.png")
-        .then((BitmapDescriptor icon) {
-      Marker marcadorMotorista = Marker(
-          markerId: MarkerId("${latLngMotorista.latitude} - "
-              "${latLngMotorista.longitude} - "
-              "marcador-motorista"),
-          position: latLngMotorista,
-          infoWindow: InfoWindow(title: "Local Motorista"),
-          icon: icon);
-
-      _listaMarcadores.add(marcadorMotorista);
+        marcadorOrigem.caminhoImagem)
+        .then((BitmapDescriptor icone) {
+      Marker mOrigem = Marker(
+          markerId: MarkerId(marcadorOrigem.caminhoImagem),
+          position: LatLng(latLngOrigem.latitude, latLngOrigem.longitude),
+          infoWindow: InfoWindow(title: marcadorOrigem.titulo),
+          icon: icone);
+      _listaMarcadores.add( mOrigem );
     });
 
     BitmapDescriptor.fromAssetImage(
         ImageConfiguration(devicePixelRatio: pixelRatio),
-        "imagens/uber/passageiro.png")
-        .then((BitmapDescriptor icon) {
-      Marker marcadorPassageiro = Marker(
-          markerId: MarkerId("${latLngPassageiro.latitude} - "
-              "${latLngPassageiro.longitude} - "
-              "marcador-passageiro"),
-          position: latLngPassageiro,
-          infoWindow: InfoWindow(title: "Local passageiro"),
-          icon: icon);
-
-      _listaMarcadores.add(marcadorPassageiro);
+        marcadorDestino.caminhoImagem)
+        .then((BitmapDescriptor icone) {
+      Marker mDestino = Marker(
+          markerId: MarkerId(marcadorDestino.caminhoImagem),
+          position: LatLng(latLngDestino.latitude, latLngDestino.longitude),
+          infoWindow: InfoWindow(title: marcadorDestino.titulo),
+          icon: icone);
+      _listaMarcadores.add( mDestino );
     });
 
     setState(() {
       _marcadores = _listaMarcadores;
-      // _posicaoCamera = CameraPosition(target: latLngMotorista, zoom: 25);
-      // _movimentarCamera();
     });
+
   }
 
   _movimentarCameraBounds(LatLngBounds latLngBounds) async {
@@ -467,6 +592,7 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
             _statusACaminho();
             break;
           case StatusRequisicao.VIAGEM:
+            _statusEmViagem();
             break;
           case StatusRequisicao.FINALIZADA:
             break;
