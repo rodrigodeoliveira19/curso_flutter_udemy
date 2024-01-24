@@ -13,6 +13,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../model/Usuario.dart';
 import '../util/StatusRequisicao.dart';
 import '../util/UsuarioFirebase.dart';
+import 'package:intl/intl.dart';
 
 class Corrida extends StatefulWidget {
   String idRequisicao;
@@ -161,6 +162,7 @@ class _CorridaState extends State<Corrida> {
             _statusEmViagem();
             break;
           case StatusRequisicao.FINALIZADA:
+            _statusFinalizada();
             break;
         }
 
@@ -293,6 +295,64 @@ class _CorridaState extends State<Corrida> {
   }
 
   _finalizarCorrida(){
+    FirebaseFirestore db = FirebaseFirestore.instance;
+    db
+        .collection("requisicoes")
+        .doc(widget.idRequisicao)
+        .update({"status": StatusRequisicao.FINALIZADA})
+    .then((_){
+      String idPassageiro = _dadosRequisicao["passageiro"]["idUsuario"];
+      db
+          .collection("requisicao_ativa")
+          .doc(idPassageiro)
+          .update({"status": StatusRequisicao.FINALIZADA});
+
+      //Salvar requisição ativa para motorista
+      String idMotorista = _dadosRequisicao["motorista"]["idUsuario"];
+      db.collection("requisicao_ativa_motorista").doc(idMotorista).update({
+        "status": StatusRequisicao.FINALIZADA
+      });
+    });
+  }
+
+  _statusFinalizada() async {
+
+    //Calcula valor da corrida
+    double latitudeDestino = _dadosRequisicao["destino"]["latitude"];
+    double longitudeDestino = _dadosRequisicao["destino"]["longitude"];
+
+    double latitudeOrigem = _dadosRequisicao["origem"]["latitude"];
+    double longitudeOrigem = _dadosRequisicao["origem"]["longitude"];
+
+    double distanciaEmMetros = await Geolocator.distanceBetween(
+        latitudeOrigem,
+        longitudeOrigem,
+        latitudeDestino,
+        longitudeDestino
+    );
+
+    //Converte para KM
+    double distanciaKm = distanciaEmMetros / 1000;
+
+    //8 é o valor cobrado por KM
+    double valorViagem = distanciaKm * 8;
+
+    //Formatar valor viagem
+    var f = NumberFormat("#,##0.00", "pt_BR");
+    var valorViagemFormatado = f.format( valorViagem );
+    //
+    _mensagemStatus = "Viagem finalizada";
+    _alterarBotaoPrincipal(
+        "Confirmar - R\$ ${valorViagemFormatado}",
+        Color(0xff1ebbd8),
+            (){
+          _confirmarCorrida();
+        }
+    );
+
+  }
+
+  _confirmarCorrida(){
 
   }
 
