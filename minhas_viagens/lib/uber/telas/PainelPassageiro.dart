@@ -14,6 +14,7 @@ import 'dart:io';
 import '../model/Destino.dart';
 import '../model/Marcador.dart';
 import '../util/StatusRequisicao.dart';
+import 'package:intl/intl.dart';
 
 class PainelPassageiro extends StatefulWidget {
   const PainelPassageiro({Key? key}) : super(key: key);
@@ -361,6 +362,83 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
 
   }
 
+  _statusFinalizada() async {
+
+    //Calcula valor da corrida
+    double latitudeDestino = _dadosRequisicao["destino"]["latitude"];
+    double longitudeDestino = _dadosRequisicao["destino"]["longitude"];
+
+    double latitudeOrigem = _dadosRequisicao["origem"]["latitude"];
+    double longitudeOrigem = _dadosRequisicao["origem"]["longitude"];
+
+    double distanciaEmMetros = await Geolocator.distanceBetween(
+        latitudeOrigem,
+        longitudeOrigem,
+        latitudeDestino,
+        longitudeDestino
+    );
+
+    //Converte para KM
+    double distanciaKm = distanciaEmMetros / 1000;
+
+    //8 é o valor cobrado por KM
+    double valorViagem = distanciaKm * 8;
+
+    //Formatar valor viagem
+    var f = NumberFormat("#,##0.00", "pt_BR");
+    var valorViagemFormatado = f.format( valorViagem );
+
+    _alterarBotaoPrincipal(
+        "Total: - R\$ ${valorViagemFormatado}",
+        Color(0xff1ebbd8),
+            (){}
+    );
+
+    _marcadores = {};
+    Position position = Position(longitude: longitudeDestino, latitude: latitudeDestino, timestamp: null, accuracy: 0, altitude: 0, heading: 0, speed: 0, speedAccuracy: 0);
+    // Position position = _localMotorista;
+    _posicaoCamera = CameraPosition(
+        target: LatLng(position.latitude, position.longitude), zoom: 18);
+    _exibirMarcador(position,"imagens/uber/destino.png","Destino");
+    _movimentarCamera();
+
+  }
+
+  _statusConfirmada(){
+    _streamSubscriptionRequisicoes.cancel();
+
+    _exibirCaixaEnderecoDestino = true;
+    _alterarBotaoPrincipal(
+        "Chamar uber",
+        Color(0xff1ebbd8), () {
+      _chamarUber();
+    });
+
+    _dadosRequisicao = {};
+  }
+
+  void _exibirMarcador(
+      Position position, String icone, String infoWindow) async {
+    double pixelRatio = MediaQuery.of(context).devicePixelRatio;
+
+    BitmapDescriptor.fromAssetImage(
+        ImageConfiguration(devicePixelRatio: pixelRatio), icone)
+        .then((BitmapDescriptor bitmapDescriptor) {
+      Marker marcador = Marker(
+          markerId: MarkerId(icone),
+          position: LatLng(position.latitude, position.longitude),
+          infoWindow: InfoWindow(title: infoWindow),
+          icon: bitmapDescriptor,
+          onTap: () {
+            print("Cartório clicado!!");
+          });
+
+      setState(() {
+        _marcadores.add(marcador);
+      });
+    });
+  }
+
   _exibirCentralizarDoisMarcadores( Marcador marcadorOrigem, Marcador marcadorDestino ){
 
     double latitudeOrigem = marcadorOrigem.local.latitude;
@@ -595,34 +673,16 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
             _statusEmViagem();
             break;
           case StatusRequisicao.FINALIZADA:
+            _statusFinalizada();
+            break;
+          case StatusRequisicao.CONFIRMADA:
+            _statusConfirmada();
             break;
         }
       } else {
         _statusUberNaoChamado();
       }
     });
-  }
-
-  void _stausInterface(){
-    if(_idRequisicao.isNotEmpty){
-      String status = _dadosRequisicao["status"];
-      if(status != "NAO_RECUPERADO"){
-        switch (status) {
-          case StatusRequisicao.AGUARDANDO:
-            print("passssssssssssssei por aqui");
-            _statusAguardando();
-            break;
-          case StatusRequisicao.A_CAMINHO:
-            _statusACaminho();
-            break;
-          case StatusRequisicao.VIAGEM:
-            break;
-          case StatusRequisicao.FINALIZADA:
-            break;
-        }
-      }
-
-    }
   }
 
   @override

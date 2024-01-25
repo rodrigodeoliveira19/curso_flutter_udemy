@@ -164,6 +164,9 @@ class _CorridaState extends State<Corrida> {
           case StatusRequisicao.FINALIZADA:
             _statusFinalizada();
             break;
+          case StatusRequisicao.CONFIRMADA:
+            _statusConfirmada();
+            break;
         }
 
       }
@@ -350,10 +353,37 @@ class _CorridaState extends State<Corrida> {
         }
     );
 
+    _marcadores = {};
+    Position position = Position(longitude: longitudeDestino, latitude: latitudeDestino, timestamp: null, accuracy: 0, altitude: 0, heading: 0, speed: 0, speedAccuracy: 0);
+    // Position position = _localMotorista;
+    _posicaoCamera = CameraPosition(
+        target: LatLng(position.latitude, position.longitude), zoom: 18);
+    _exibirMarcador(position,"imagens/uber/destino.png","Destino");
+    _movimentarCamera();
+
+  }
+
+  _statusConfirmada(){
+    Navigator.pushReplacementNamed(context, "/painel-motorista");
   }
 
   _confirmarCorrida(){
+    FirebaseFirestore db = FirebaseFirestore.instance;
+    db.collection("requisicoes")
+        .doc( widget.idRequisicao )
+        .update({
+      "status" : StatusRequisicao.CONFIRMADA
+    });
 
+    String idPassageiro = _dadosRequisicao["passageiro"]["idUsuario"];
+    db.collection("requisicao_ativa")
+        .doc( idPassageiro )
+        .delete();
+
+    String idMotorista = _dadosRequisicao["motorista"]["idUsuario"];
+    db.collection("requisicao_ativa_motorista")
+        .doc( idMotorista )
+        .delete();
   }
 
   /*Centraliza os marcadores no mapa.
