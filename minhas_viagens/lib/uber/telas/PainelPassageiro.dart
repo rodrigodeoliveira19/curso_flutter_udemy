@@ -574,6 +574,8 @@ class _PainelPassageiroState extends State<PainelPassageiro> {
         .doc(_idRequisicao)
         .update({"status": StatusRequisicao.CANCELADA}).then(
             (_) => {db.collection("requisicao_ativa").doc(user?.uid).delete()});
+    _statusUberNaoChamado();
+    _streamSubscriptionRequisicoes.cancel();
   }
 
   // _adicionarListenerRequisicaoAtiva() async {
